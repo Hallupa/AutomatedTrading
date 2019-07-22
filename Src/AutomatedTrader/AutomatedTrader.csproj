@@ -139,7 +139,6 @@
     <Compile Include="ViewModels\StrategyCustomRunViewModel.cs" />
     <Compile Include="ViewModels\StrategyRunResultsViewModel.cs" />
     <Compile Include="ViewModels\StrategyRunViewModel.cs" />
-    <Compile Include="ViewModels\TradesViewModel.cs" />
     <Compile Include="Views\StrategyCustomRunView.xaml.cs">
       <DependentUpon>StrategyCustomRunView.xaml</DependentUpon>
     </Compile>
@@ -148,9 +147,6 @@
     </Compile>
     <Compile Include="Views\StrategyRunView.xaml.cs">
       <DependentUpon>StrategyRunView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\TradesView.xaml.cs">
-      <DependentUpon>TradesView.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -173,10 +169,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\StrategyRunView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\TradesView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

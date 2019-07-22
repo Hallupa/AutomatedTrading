@@ -65,27 +65,11 @@ namespace AutomatedTrader.ViewModels
         {
             DependencyContainer.ComposeParts(this);
 
-            /*_strategyService.RegisterStrategy(new TrendyJibeStrategy());
-            _strategyService.RegisterStrategy(new LamboStrategy());
-            _strategyService.RegisterStrategy(new EightEMABounceStrategy());
-            _strategyService.RegisterStrategy(new TestStrategy());*/
-
-            OpenTradesCommand = new DelegateCommand(OpenTrades);
+            _strategyService.RegisterStrategy(new SampleStrategy());
             CheckFXCandlesCommand = new DelegateCommand(CheckFXCandles);
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
 
-            /*var manualEntryBrokers = new ManualEntryBrokers(
-                new List<IManualEntryBroker>
-                {
-                    new CoinbaseManualEntryBroker(),
-                    new BittrexManualEntryBroker(),
-                    new CryptopiaManualEntryBroker(),
-                    new KrakenManualEntryBroker(),
-                    new KucoinManualEntryBroker(),
-                    new BinanceManualEntryBroker(),
-                    new OthersManualEntryBroker()
-                });*/
 
             var fxcm = new FxcmBroker();
             var brokers = new IBroker[]
@@ -97,13 +81,8 @@ namespace AutomatedTrader.ViewModels
 
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
-            //_brokersService.LoadBrokerAccounts();
 
-            /*var account = _brokersService.AccountsLookup[manualEntryBrokers];
-            if (!manualEntryBrokers.UpdateAccount(account, _candleService))
-            {
-                throw new ApplicationException();
-            }*/
+
 
             Task.Run(() => Start()); // If DLL binding errors, fix is to build in 64 bit
         }
@@ -242,8 +221,6 @@ namespace AutomatedTrader.ViewModels
         #endregion
 
         #region Properties
-        public ICommand OpenTradesCommand { get; private set; }
-
         [Import]
         public ChartingService ChartingService { get; private set; }
 
@@ -256,11 +233,6 @@ namespace AutomatedTrader.ViewModels
         #endregion
 
         #region Methods
-        private void OpenTrades(object o)
-        {
-            var tradesView = new TradesView();
-            tradesView.Show();
-        }
 
         private void Start()
         {

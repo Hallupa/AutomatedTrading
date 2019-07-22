@@ -73,7 +73,7 @@ namespace AutomatedTrader.ViewModels
             _dispatcher.Invoke(() =>
             {
                 // Remove obsolete trades
-                for (var i = 0; i < Trades.Count; i++)
+                for (var i = Trades.Count - 1; i >= 0; i--)
                 {
                     if (!allTrades.Contains(Trades[i]))
                     {
