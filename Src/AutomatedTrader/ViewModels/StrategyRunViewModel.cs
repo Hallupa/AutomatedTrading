@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
-using AutomatedTrader.Services;
+using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
 using Newtonsoft.Json;

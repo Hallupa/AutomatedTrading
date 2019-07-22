@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Interactivity;
 using ICSharpCode.AvalonEdit;
 
-namespace AutomatedTrader.Behaviours
+namespace AutomatedTraderDesigner.Behaviours
 {
     public sealed class AvalonEditBehaviour : Behavior<TextEditor>
     {
