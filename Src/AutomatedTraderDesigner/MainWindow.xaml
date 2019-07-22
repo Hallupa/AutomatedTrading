@@ -1,0 +1,65 @@
+﻿<Window x:Class="AutomatedTraderDesigner.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AutomatedTrader"
+        xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
+        xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
+        xmlns:viewModels="clr-namespace:AutomatedTrader.ViewModels"
+        xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
+        xmlns:viewModels1="clr-namespace:AutomatedTraderDesigner.ViewModels"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="900" Width="1350">
+    <Grid>
+        <Grid.Resources>
+            <converters:ObjectToVisibilityConverter x:Key="ObjToVis"/>
+            <converters:ObjectToBoolConverter x:Key="ObjToBool"/>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Ribbon x:Name="RibbonWin" Grid.Row="0" SelectedIndex="0">
+
+            <RibbonTab Header="Page">
+                <RibbonGroup Header="Trades">
+                    <RibbonButton Label="View trade" Command="{Binding UIService.ViewTradeCommand}" IsEnabled="{Binding UIService.IsViewTradeEnabled}"/>
+                    <RibbonButton Label="View trade setup" Command="{Binding UIService.ViewTradeSetupCommand}" IsEnabled="{Binding UIService.IsViewTradeEnabled}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="Strategy tester">
+                    <RibbonToggleButton Label="Run" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategy}, Mode=TwoWay}"/>
+                    <RibbonToggleButton Label="Custom strategy" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=TwoWay}"/>
+                    <RibbonToggleButton Label="Results" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResults}, Mode=TwoWay}"/>
+                </RibbonGroup>
+
+            </RibbonTab>
+
+            <RibbonTab Header="Chart">
+                <RibbonGroup Header="Annotations">
+                    <RibbonToggleButton Label="Add Line" IsChecked="{Binding ChartingService.ChartMode, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static charting:ChartMode.AddLine}, Mode=TwoWay}"/>
+                    <RibbonToggleButton Label="Zoom" IsChecked="{Binding ChartingService.ChartMode, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static charting:ChartMode.Zoom}, Mode=TwoWay}"/>
+                </RibbonGroup>
+            </RibbonTab>
+
+            <RibbonTab Header="Candles">
+                <RibbonGroup Header="FX">
+                    <RibbonButton Label="Update candles" Command="{Binding UpdateFXCandlesCommand}"/>
+                    <RibbonButton Label="Check candles" Command="{Binding CheckFXCandlesCommand}"/>
+                    <RibbonButton Label="Get tick data" Command="{Binding UpdateTickDataCommand}"/>
+                </RibbonGroup>
+            </RibbonTab>
+        </Ribbon>
+
+        <Grid Grid.Row="1">
+            <Frame Source="Views/StrategyRunView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategy}, Mode=OneWay}"/>
+            <Frame Source="Views/StrategyRunResultsView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResults}, Mode=OneWay}"/>
+            <Frame Source="Views/StrategyCustomRunView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=OneWay}"/>
+        </Grid>
+
+        <ui:LogControl Grid.Row="2"/>
+    </Grid>
+</Window>
