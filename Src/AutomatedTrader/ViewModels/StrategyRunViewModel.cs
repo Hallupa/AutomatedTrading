@@ -40,7 +40,7 @@ namespace AutomatedTrader.ViewModels
 
             public Timeframe[] CandleTimeframesRequired { get; }
             public List<TradeDetails> CreateNewTrades(Timeframe timeframe, MarketDetails market, 
-                TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<TradeDetails> existingTrades)
+                TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<TradeDetails> existingTrades, ITradeDetailsAutoCalculatorService calculator)
             {
                 throw new NotImplementedException();
             }
@@ -59,6 +59,7 @@ namespace AutomatedTrader.ViewModels
         [Import] private MarketsService _marketsService;
         [Import] private StrategyService _strategyService;
         [Import] private IMarketDetailsService _marketDetailsService;
+        [Import] private ITradeDetailsAutoCalculatorService _tradeCalculatorService;
         private bool _runStrategyEnabled = true;
         public event PropertyChangedEventHandler PropertyChanged;
         private Dispatcher _dispatcher;
@@ -75,7 +76,7 @@ namespace AutomatedTrader.ViewModels
             _dispatcher = Dispatcher.CurrentDispatcher;
             DependencyContainer.ComposeParts(this);
 
-            Markets = new ObservableCollection<string>(_marketsService.GetMarkets().Select(m => m.Name));
+            Markets = new ObservableCollection<string>(_marketsService.GetMarkets().Select(m => m.Name).OrderBy(x => x));
 
             // Load existing results
             var savedResultsPath = Path.Combine(BrokersService.DataDirectory, @"StrategyTester\StrategyTesterResults.json");
@@ -284,6 +285,7 @@ namespace AutomatedTrader.ViewModels
             var broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
 
             _strategyService.ClearCustomStrategies();
+
             if (strategies.Contains(_customStrategy))
             {
                 strategies.Remove(_customStrategy);
@@ -305,9 +307,9 @@ namespace AutomatedTrader.ViewModels
             var expectedTrades = 0;
             var expectedTradesFound = 0;
 
-            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
+            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(2, d =>
             {
-                var strategyTester = new StrategyRunner(_candlesService);
+                var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService);
                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
                 var latest = !string.IsNullOrEmpty(EndDate) ? (DateTime?)DateTime.Parse(EndDate) : null;
                 var result = strategyTester.Run(d.Strategy, d.Market, broker,
