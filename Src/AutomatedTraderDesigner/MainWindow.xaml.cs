@@ -2,7 +2,6 @@
 using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Windows;
-using AutomatedTrader.ViewModels;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Core.Services;

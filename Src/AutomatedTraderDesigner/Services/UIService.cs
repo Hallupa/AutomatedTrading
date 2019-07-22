@@ -5,10 +5,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AutomatedTrader.ViewModels;
+using AutomatedTraderDesigner.ViewModels;
 using Hallupa.Library;
 
-namespace AutomatedTrader.Services
+namespace AutomatedTraderDesigner.Services
 {
     [Export(typeof(UIService))]
     [PartCreationPolicy(CreationPolicy.Shared)]

@@ -6,7 +6,6 @@
         xmlns:local="clr-namespace:AutomatedTrader"
         xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
         xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
-        xmlns:viewModels="clr-namespace:AutomatedTrader.ViewModels"
         xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
         xmlns:viewModels1="clr-namespace:AutomatedTraderDesigner.ViewModels"
         mc:Ignorable="d"

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
-using AutomatedTrader.ViewModels;
+using AutomatedTraderDesigner.ViewModels;
 
-namespace AutomatedTrader.Views
+namespace AutomatedTraderDesigner.Views
 {
     /// <summary>
     /// Interaction logic for StrategyRunResultsView.xaml

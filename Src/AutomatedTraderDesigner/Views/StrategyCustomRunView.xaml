@@ -1,4 +1,4 @@
-﻿<Page x:Class="AutomatedTrader.Views.StrategyCustomRunView"
+﻿<Page x:Class="AutomatedTraderDesigner.Views.StrategyCustomRunView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -6,7 +6,7 @@
       xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
       xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
       xmlns:views="clr-namespace:TraderTools.Core.UI.Views;assembly=TraderTools.Core.UI"
-      xmlns:behaviours="clr-namespace:AutomatedTrader.Behaviours"
+      xmlns:behaviours="clr-namespace:AutomatedTraderDesigner.Behaviours"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="StrategyCustomRunView">

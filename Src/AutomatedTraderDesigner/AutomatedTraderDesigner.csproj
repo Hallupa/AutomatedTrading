@@ -131,9 +131,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviours\AvalonEditBehaviour.cs" />
     <Compile Include="SampleStrategy.cs" />
+    <Compile Include="Services\StrategyRunnerResultsService.cs" />
+    <Compile Include="Services\UIService.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />
+    <Compile Include="ViewModels\StrategyCustomRunViewModel.cs" />
+    <Compile Include="ViewModels\StrategyRunResultsViewModel.cs" />
     <Compile Include="ViewModels\StrategyRunViewModel.cs" />
+    <Compile Include="Views\StrategyCustomRunView.xaml.cs">
+      <DependentUpon>StrategyCustomRunView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StrategyRunResultsView.xaml.cs">
+      <DependentUpon>StrategyRunResultsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\StrategyRunView.xaml.cs">
       <DependentUpon>StrategyRunView.xaml</DependentUpon>
     </Compile>
@@ -149,6 +160,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\StrategyCustomRunView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\StrategyRunResultsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\StrategyRunView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -209,10 +228,6 @@
     <ProjectReference Include="..\..\Common\Src\TraderTools.Strategy\TraderTools.Strategy.csproj">
       <Project>{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}</Project>
       <Name>TraderTools.Strategy</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\AutomatedTrader\AutomatedTrader.csproj">
-      <Project>{b7f671b3-abb8-4920-a14e-2878bb0cc159}</Project>
-      <Name>AutomatedTrader</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
