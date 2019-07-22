@@ -38,22 +38,11 @@ namespace AutomatedTrader.ViewModels
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [Import]
-        private BrokersService _brokersService;
-
-        [Import]
-        private TickDataService _tickDataService;
-
-        [Import]
-        private StrategyService _strategyService;
-
-        [Import]
-        private IBrokersCandlesService _candleService;
-
-        [Import]
-        private MarketsService _marketsService;
-
-        private ChartMode _chartLine;
+        [Import] private BrokersService _brokersService;
+        [Import] private TickDataService _tickDataService;
+        [Import] private StrategyService _strategyService;
+        [Import] private IBrokersCandlesService _candleService;
+        [Import] private MarketsService _marketsService;
         private bool _updatingCandles;
 
         [Import] public UIService UIService { get; private set; }
@@ -75,14 +64,10 @@ namespace AutomatedTrader.ViewModels
             var brokers = new IBroker[]
             {
                 fxcm,
-               /* new BinanceBroker(),
-                manualEntryBrokers*/
             };
 
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
-
-
 
             Task.Run(() => Start()); // If DLL binding errors, fix is to build in 64 bit
         }
