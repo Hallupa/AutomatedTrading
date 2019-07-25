@@ -25,11 +25,11 @@ namespace AutomatedTraderDesigner.ViewModels
         public StrategyRunResultsViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
+            LargeChartTimeframe = Timeframe.M1;
+            UpdateCandlesOnViewTrade = false;
 
             DependencyContainer.ComposeParts(this);
             Broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
-
-            LargeChartTimeframe = Timeframe.M15;
 
             _uiService.ViewTradeObservable.Subscribe(o =>
             {
@@ -49,7 +49,13 @@ namespace AutomatedTraderDesigner.ViewModels
                     }
                 });
 
-            _testResultsUpdatedObserver = _results.TestResultsUpdated.Subscribe(newResults =>
+            _testResultsUpdatedObserver = _results.TestRunStarted.Subscribe(newResults =>
+            {
+                UpdateTrades();
+                ResultsViewModel.UpdateResults();
+            });
+
+            _testResultsUpdatedObserver = _results.TestRunCompleted.Subscribe(newResults =>
             {
                 UpdateTrades();
                 ResultsViewModel.UpdateResults();
@@ -72,6 +78,12 @@ namespace AutomatedTraderDesigner.ViewModels
 
             _dispatcher.Invoke(() =>
             {
+                // Clear trades in a single operation to speed it up
+                if (allTrades.Count == 0)
+                {
+                    Trades.Clear();
+                }
+
                 // Remove obsolete trades
                 for (var i = Trades.Count - 1; i >= 0; i--)
                 {
@@ -82,23 +94,30 @@ namespace AutomatedTraderDesigner.ViewModels
                 }
 
                 // Add new trades
-                for (var i = 0; i < allTrades.Count; i++)
+                if (Trades.Count == 0)
                 {
-                    var trade = allTrades[i];
-                    if (i >= Trades.Count)
+                    Trades.AddRange(allTrades);
+                }
+                else
+                {
+                    for (var i = 0; i < allTrades.Count; i++)
                     {
-                        Trades.Add(trade);
-                    }
-                    else if (trade != Trades[i])
-                    {
-                        var existingIndex = Trades.IndexOf(trade);
-                        if (existingIndex != -1)
+                        var trade = allTrades[i];
+                        if (i >= Trades.Count)
                         {
-                            Trades.Move(existingIndex, i);
+                            Trades.Add(trade);
                         }
-                        else
+                        else if (trade != Trades[i])
                         {
-                            Trades.Insert(i, trade);
+                            var existingIndex = Trades.IndexOf(trade);
+                            if (existingIndex != -1)
+                            {
+                                Trades.Move(existingIndex, i);
+                            }
+                            else
+                            {
+                                Trades.Insert(i, trade);
+                            }
                         }
                     }
                 }

@@ -76,6 +76,8 @@ namespace AutomatedTraderDesigner.ViewModels
             _dispatcher = Dispatcher.CurrentDispatcher;
             DependencyContainer.ComposeParts(this);
 
+            _tradeCalculatorService.SetOptions(CalculateOptions.ExcludePricePerPip);
+
             Markets = new ObservableCollection<string>(_marketsService.GetMarkets().Select(m => m.Name).OrderBy(x => x));
 
             // Load existing results
@@ -84,6 +86,7 @@ namespace AutomatedTraderDesigner.ViewModels
             {
                 var results = JsonConvert.DeserializeObject<List<TradeDetails>>(File.ReadAllText(savedResultsPath));
                 _results.AddResult(results);
+                _results.RaiseTestRunCompleted();
             }
 
             RunStrategyCommand = new DelegateCommand(RunStrategyClicked);
@@ -293,7 +296,10 @@ namespace AutomatedTraderDesigner.ViewModels
 
                 if (customStrategy == null)
                 {
-                    RunStrategyEnabled = true;
+                    _dispatcher.Invoke(() =>
+                    {
+                        RunStrategyEnabled = true;
+                    });
                     return;
                 }
 
@@ -303,11 +309,26 @@ namespace AutomatedTraderDesigner.ViewModels
 
             var markets = SelectedMarkets.Cast<string>().ToList();
             _results.Reset();
+
+            _dispatcher.Invoke((Action)(() =>
+            {
+                _results.RaiseTestRunStarted();
+
+                NotifyPropertyChanged("TotalTrades");
+                NotifyPropertyChanged("AverageRTrade");
+                NotifyPropertyChanged("TotalR");
+                NotifyPropertyChanged("PercentSuccessTrades");
+                NotifyPropertyChanged("AverageWinningRRRTrades");
+                NotifyPropertyChanged("AverageLosingRRRTrades");
+
+                RunStrategyEnabled = false;
+            }));
+
             var completed = 0;
             var expectedTrades = 0;
             var expectedTradesFound = 0;
 
-            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(2, d =>
+            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
             {
                 var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService);
                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
@@ -323,19 +344,10 @@ namespace AutomatedTraderDesigner.ViewModels
                 {
                     _results.AddResult(result);
 
-                    _dispatcher.Invoke((Action)(() =>
-                    {
-                        NotifyPropertyChanged("TotalTrades");
-                        NotifyPropertyChanged("AverageRTrade");
-                        NotifyPropertyChanged("TotalR");
-                        NotifyPropertyChanged("PercentSuccessTrades");
-                        NotifyPropertyChanged("AverageWinningRRRTrades");
-                        NotifyPropertyChanged("AverageLosingRRRTrades");
+                    // Adding trades to UI in realtime slows down the UI too much with strategies with many trades
 
-                        completed++;
-
-                        Log.Info($"Completed {completed}/{markets.Count}");
-                    }));
+                    completed++;
+                    Log.Info($"Completed {completed}/{markets.Count}");
                 }
 
                 return ProducerConsumerActionResult.Success;
@@ -367,6 +379,15 @@ namespace AutomatedTraderDesigner.ViewModels
 
             _dispatcher.Invoke((Action)(() =>
             {
+                _results.RaiseTestRunCompleted();
+
+                NotifyPropertyChanged("TotalTrades");
+                NotifyPropertyChanged("AverageRTrade");
+                NotifyPropertyChanged("TotalR");
+                NotifyPropertyChanged("PercentSuccessTrades");
+                NotifyPropertyChanged("AverageWinningRRRTrades");
+                NotifyPropertyChanged("AverageLosingRRRTrades");
+
                 RunStrategyEnabled = true;
             }));
         }

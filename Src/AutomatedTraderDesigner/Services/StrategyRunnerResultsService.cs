@@ -15,6 +15,14 @@ namespace AutomatedTraderDesigner.Services
 
         public IObservable<List<TradeDetails>> TestResultsUpdated => _testResultsUpdated.AsObservable();
 
+        private Subject<List<TradeDetails>> _testRunCompleted = new Subject<List<TradeDetails>>();
+
+        private Subject<List<TradeDetails>> _testRunStarted = new Subject<List<TradeDetails>>();
+
+        public IObservable<List<TradeDetails>> TestRunCompleted => _testRunCompleted.AsObservable();
+
+        public IObservable<List<TradeDetails>> TestRunStarted => _testRunStarted.AsObservable();
+
         public void AddResult(List<TradeDetails> result)
         {
             lock (Results)
@@ -23,6 +31,16 @@ namespace AutomatedTraderDesigner.Services
             }
 
             _testResultsUpdated.OnNext(result);
+        }
+
+        public void RaiseTestRunCompleted()
+        {
+            _testRunCompleted.OnNext(Results);
+        }
+
+        public void RaiseTestRunStarted()
+        {
+            _testRunStarted.OnNext(Results);
         }
 
         public void Reset()

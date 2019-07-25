@@ -38,7 +38,12 @@ namespace AutomatedTraderDesigner.ViewModels
                     }
                 });
 
-            _testResultsUpdatedObserver = _results.TestResultsUpdated.Subscribe(newResults =>
+            _testResultsUpdatedObserver = _results.TestRunCompleted.Subscribe(newResults =>
+            {
+                ResultsViewModel.UpdateResults();
+            });
+
+            _testResultsUpdatedObserver = _results.TestRunStarted.Subscribe(newResults =>
             {
                 ResultsViewModel.UpdateResults();
             });
