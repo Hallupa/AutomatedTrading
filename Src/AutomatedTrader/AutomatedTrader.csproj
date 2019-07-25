@@ -131,9 +131,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="SampleStrategy.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />
-    <Compile Include="ViewModels\StrategyRunViewModel.cs" />
     <Compile Include="Views\StrategyRunView.xaml.cs">
       <DependentUpon>StrategyRunView.xaml</DependentUpon>
     </Compile>

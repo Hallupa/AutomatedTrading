@@ -133,6 +133,7 @@
     </ApplicationDefinition>
     <Compile Include="Behaviours\AvalonEditBehaviour.cs" />
     <Compile Include="SampleStrategy.cs" />
+    <Compile Include="SampleStrategy2.cs" />
     <Compile Include="Services\StrategyRunnerResultsService.cs" />
     <Compile Include="Services\UIService.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />
