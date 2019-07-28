@@ -253,7 +253,7 @@ namespace AutomatedTraderDesigner.ViewModels
                     // Adding trades to UI in realtime slows down the UI too much with strategies with many trades
 
                     completed++;
-                    Log.Info($"Completed {completed}/{markets.Count}");
+                    Log.Info($"Completed {completed}/{markets.Count * strategies.Count}");
                 }
 
                 return ProducerConsumerActionResult.Success;
