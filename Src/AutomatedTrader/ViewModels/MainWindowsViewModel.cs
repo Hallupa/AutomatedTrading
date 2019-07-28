@@ -6,16 +6,14 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using System.Windows.Threading;
-using AutomatedTrader.Services;
-using AutomatedTrader.Views;
+using AutomatedTraderDesigner;
+using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
-using TraderTools.Core.UI;
 using TraderTools.Core.UI.Services;
 
 namespace AutomatedTrader.ViewModels
@@ -54,11 +52,9 @@ namespace AutomatedTrader.ViewModels
         {
             DependencyContainer.ComposeParts(this);
 
-            _strategyService.RegisterStrategy(new SampleStrategy());
             CheckFXCandlesCommand = new DelegateCommand(CheckFXCandles);
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
-
 
             var fxcm = new FxcmBroker();
             var brokers = new IBroker[]
@@ -69,7 +65,7 @@ namespace AutomatedTrader.ViewModels
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
 
-            Task.Run(() => Start()); // If DLL binding errors, fix is to build in 64 bit
+            Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
         }
 
         private void UpdateTickData()
