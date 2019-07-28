@@ -27,30 +27,6 @@ namespace AutomatedTraderDesigner.ViewModels
 {
     public class StrategyRunViewModel : INotifyPropertyChanged
     {
-        private CustomStrategy _customStrategy = new CustomStrategy();
-        private static int _classNumber = 1;
-
-        private class CustomStrategy : IStrategy
-        {
-            public string Name => "Custom";
-            public TimeframeLookup<Indicator[]> CreateTimeframeIndicators()
-            {
-                throw new NotImplementedException();
-            }
-
-            public Timeframe[] CandleTimeframesRequired { get; }
-            public List<TradeDetails> CreateNewTrades(Timeframe timeframe, MarketDetails market, 
-                TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<TradeDetails> existingTrades, ITradeDetailsAutoCalculatorService calculator)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void UpdateExistingOpenTrades(TradeDetails trade, string market, TimeframeLookup<List<BasicCandleAndIndicators>> candles)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         [Import] private IBrokersCandlesService _candlesService;
@@ -61,10 +37,11 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private IMarketDetailsService _marketDetailsService;
         [Import] private ITradeDetailsAutoCalculatorService _tradeCalculatorService;
         private bool _runStrategyEnabled = true;
-        public event PropertyChangedEventHandler PropertyChanged;
         private Dispatcher _dispatcher;
         private ProducerConsumer<(IStrategy Strategy, MarketDetails Market)> _producerConsumer;
         private bool _saveCacheEnabled = true;
+        private IDisposable _strategiesUpdatedDisposable;
+        private List<IStrategy> _strategies;
         public static string CustomCode { get; set; }
 
         #endregion
@@ -94,7 +71,12 @@ namespace AutomatedTraderDesigner.ViewModels
             LoadCacheCommand = new DelegateCommand(o => LoadCache());
             ClearCachedTradesCommand = new DelegateCommand(o => ClearCachedTrades());
             Strategies = StrategyService.Strategies.ToList();
-            Strategies.Add(_customStrategy);
+            _strategiesUpdatedDisposable = StrategyService.UpdatedObservable.Subscribe(StrategiesUpdated);
+        }
+
+        private void StrategiesUpdated(object obj)
+        {
+            Strategies = StrategyService.Strategies.ToList();
         }
 
         private void ClearCachedTrades()
@@ -103,7 +85,15 @@ namespace AutomatedTraderDesigner.ViewModels
             GC.Collect();
         }
 
-        public List<IStrategy> Strategies { get; private set; }
+        public List<IStrategy> Strategies
+        {
+            get => _strategies;
+            private set
+            {
+                _strategies = value;
+                OnPropertyChanged();
+            }
+        }
 
         private void SaveCache()
         {
@@ -216,96 +206,12 @@ namespace AutomatedTraderDesigner.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        public IStrategy CreateStrategy(string code)
-        {
-            _classNumber++;
-
-            var namespaceRegex = new Regex(@"namespace [a-zA-Z\.\r\n ]*{");
-            var match = namespaceRegex.Match(code);
-            if (match.Success)
-            {
-                code = namespaceRegex.Replace(code, "");
-
-                var removeLastBraces = new Regex("}[ \n]*$");
-                code = removeLastBraces.Replace(code, "");
-            }
-
-            // Get class name
-            var classNameRegex = new Regex("public class ([a-zA-Z0-9]*)");
-            match = classNameRegex.Match(code);
-            var className = match.Groups[1].Captures[0].Value;
-
-            var a = Compile(code
-                    .Replace($"class {className}", "class Test" + _classNumber)
-                    .Replace($"public {className}", "public Test" + _classNumber)
-                    .Replace($"private {className}", "public Test" + _classNumber),
-                "System.dll", "System.Core.dll", "TraderTools.Core.dll", "Hallupa.Library.dll", "TraderTools.Indicators.dll", "TraderTools.Basics.dll",
-                @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll");
-
-            if (a.Errors.Count > 0)
-            {
-                foreach (var error in a.Errors)
-                {
-                    Log.Error(error);
-                }
-
-                return null;
-            }
-
-            // create Test instance
-            var t = a.CompiledAssembly.GetType("Test" + _classNumber);
-
-            if (t == null)
-            {
-                Log.Error("Unable to create class 'Test'");
-                return null;
-            }
-
-            var strategy = (IStrategy)Activator.CreateInstance(t);
-
-            return strategy;
-        }
-
-        public static CompilerResults Compile(string code, params string[] assemblies)
-        {
-            var csp = new Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider();
-            var cps = new CompilerParameters();
-            cps.ReferencedAssemblies.AddRange(assemblies);
-            cps.GenerateInMemory = false;
-            cps.GenerateExecutable = false;
-            //cps.OutputAssembly = @"OutputAssembly.dll";
-            var compilerResults = csp.CompileAssemblyFromSource(cps, code);
-
-
-            return compilerResults;
-        }
-
         private void RunStrategy()
         {
             Log.Info("Running simulation");
             var stopwatch = Stopwatch.StartNew();
             var strategies = SelectedStrategies.ToList();
             var broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
-
-            _strategyService.ClearCustomStrategies();
-
-            if (strategies.Contains(_customStrategy))
-            {
-                strategies.Remove(_customStrategy);
-                var customStrategy = CreateStrategy(CustomCode);
-
-                if (customStrategy == null)
-                {
-                    _dispatcher.Invoke(() =>
-                    {
-                        RunStrategyEnabled = true;
-                    });
-                    return;
-                }
-
-                _strategyService.RegisterCustomStrategy(customStrategy);
-                strategies.Add(customStrategy);
-            }
 
             var markets = SelectedMarkets.Cast<string>().ToList();
             _results.Reset();
@@ -395,6 +301,13 @@ namespace AutomatedTraderDesigner.ViewModels
         public void ViewClosing()
         {
             _producerConsumer?.Stop();
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

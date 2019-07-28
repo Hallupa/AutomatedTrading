@@ -7,8 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using AutomatedTrader;
-using AutomatedTrader.Services;
+using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
@@ -52,7 +51,6 @@ namespace AutomatedTraderDesigner.ViewModels
         {
             DependencyContainer.ComposeParts(this);
 
-            _strategyService.RegisterStrategy(new SampleStrategy());
             CheckFXCandlesCommand = new DelegateCommand(CheckFXCandles);
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
