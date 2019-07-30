@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using StrategyRunViewModel = AutomatedTraderDesigner.ViewModels.StrategyRunViewModel;
+using AutomatedTraderDesigner.ViewModels;
 
 namespace AutomatedTraderDesigner.Views
 {
@@ -14,13 +14,7 @@ namespace AutomatedTraderDesigner.Views
         {
             InitializeComponent();
 
-            ViewModel = new StrategyRunViewModel(/*() =>
-            {
-                Dispatcher.BeginInvoke((Action)(() =>
-                {
-                    Close();
-                }));
-            }*/);
+            ViewModel = new StrategyRunViewModel();
 
             DataContext = ViewModel;
 

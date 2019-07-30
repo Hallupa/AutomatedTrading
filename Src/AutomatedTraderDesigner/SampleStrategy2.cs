@@ -1,12 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
+using TraderTools.Basics.Helpers;
 using TraderTools.Core.Extensions;
 using TraderTools.Core.Trading;
 
 namespace AutomatedTraderDesigner
 {
-    public class SampleStrategy2 : IStrategy
+    public class SampleStrategy2 : StrategyBase
     {
         private const double StopAtrRatio = 0.25;
         private const double LimitRMultiple = 3.0;
@@ -17,11 +20,11 @@ namespace AutomatedTraderDesigner
         private const Timeframe TargetTimeframe = Timeframe.H2;
         private const double MinEMATrendATRRatio = 0.0;
 
-        public string Name => "Sample";
+        public override string Name => "Trend Strategy 2";
 
-        public Timeframe[] CandleTimeframesRequired => new[] { Timeframe.H4, Timeframe.H2, Timeframe.D1 };
+        public override Timeframe[] CandleTimeframesRequired => new[] { Timeframe.H4, Timeframe.H2, Timeframe.D1 };
 
-        public TimeframeLookup<Indicator[]> CreateTimeframeIndicators()
+        public override TimeframeLookup<Indicator[]> CreateTimeframeIndicators()
         {
             return new TimeframeLookup<Indicator[]>
             {
@@ -31,54 +34,65 @@ namespace AutomatedTraderDesigner
             };
         }
 
-        public List<TradeDetails> CreateNewTrades(Timeframe timeframe, MarketDetails market,
-            TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<TradeDetails> existingTrades, ITradeDetailsAutoCalculatorService calculator)
+        public override List<Trade> CreateNewTrades(
+            MarketDetails market, TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<Trade> existingTrades)
         {
-            if (timeframe != TargetTimeframe) return null;
-
             var candles = candlesLookup[TargetTimeframe];
             if (candles.Count < 20) return null;
-            var candle = candles[candles.Count - 1];
+            if (existingTrades != null && existingTrades.Count(t => t.CloseDateTime == null) > 0) return null;
 
-            if (!candle[Indicator.EMA8].IsFormed || !candle[Indicator.EMA25].IsFormed || !candle[Indicator.EMA50].IsFormed) return null;
-            // var existingTrade = existingTrades.FirstOrDefault(x => x.Market == market.Name && x.CloseDateTime == null);
-
-            // Limit to one trade per day
-            if (candle.IsComplete == 0) return null;
-            //if (existingTrade != null) return null;
-
-            var trend = GetTrend(candles);
-            if (trend == Trend.None) return null;
-
-            if (!IsBigCandleInTrendDirection(candles, trend)) return null;
-
-            if (trend == Trend.Down)
+            for (var candleOffset = 0; candleOffset <= 1; candleOffset++)
             {
-                var entryPrice = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
-                var stop = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * StopAtrRatio;
-                var limit = entryPrice - (stop - entryPrice) * LimitRMultiple;
-                var trade = TradeDetails.CreateOrder("FXCM", (decimal)entryPrice, candle.CloseTime(),
-                    OrderKind.EntryPrice, TradeDirection.Short,
-                    1, market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4), (decimal)stop, (decimal)limit, Timeframe.D1,
-                    "8EmaBounce", null, 0, 0, 0, 0, false, OrderType.LimitEntry, calculator);
-                return new List<TradeDetails> { trade };
-            }
-            else
-            {
-                var entryPrice = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
-                var stop = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * StopAtrRatio;
-                var limit = entryPrice + (entryPrice - stop) * LimitRMultiple;
-                var trade = TradeDetails.CreateOrder("FXCM", (decimal)entryPrice, candle.CloseTime(),
-                    OrderKind.EntryPrice, TradeDirection.Long,
-                    1, market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4), (decimal)stop, (decimal)limit, Timeframe.D1,
-                    "8EmaBounce", null, 0, 0, 0, 0, false, OrderType.LimitEntry, calculator);
-                return new List<TradeDetails> { trade };
-            }
-        }
+                var candle = candles[candles.Count - 1 - candleOffset];
 
-        public void UpdateExistingOpenTrades(TradeDetails trade, string market, TimeframeLookup<List<BasicCandleAndIndicators>> candles)
-        {
-            //StopHelper.Trail00or50LevelList(trade, market, candles);
+                if (!candle[Indicator.EMA8].IsFormed || !candle[Indicator.EMA25].IsFormed ||
+                    !candle[Indicator.EMA50].IsFormed || candle.IsComplete != 1) continue;
+
+                if (candle.CloseTimeTicks > candles[candles.Count - 1].CloseTimeTicks + TimeSpan.FromMinutes(15).Ticks) continue;
+
+                var trend = GetTrend(candles, candleOffset);
+                if (trend == Trend.None) continue;
+
+                if (!IsBigCandleInTrendDirection(candles, trend, candleOffset)) continue;
+
+                if (trend == Trend.Down)
+                {
+                    var entryPrice = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
+                    var stop = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * StopAtrRatio;
+                    var limit = entryPrice - (stop - entryPrice) * LimitRMultiple;
+
+                    var stopPips = PipsHelper.GetPriceInPips((decimal)Math.Abs(stop - entryPrice),
+                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
+
+                    var limitpips = PipsHelper.GetPriceInPips((decimal)Math.Abs(limit - entryPrice),
+                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
+
+                    var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
+                        (decimal)entryPrice, TradeDirection.Short, (decimal)candles[candles.Count - 1].Close,
+                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
+                    trade.Strategies = "8EmaBounce2";
+
+                    return new List<Trade> { trade };
+                }
+                else
+                {
+                    var entryPrice = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
+                    var stop = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * StopAtrRatio;
+                    var limit = entryPrice + (entryPrice - stop) * LimitRMultiple;
+
+                    var stopPips = PipsHelper.GetPriceInPips((decimal)Math.Abs(stop - entryPrice),
+                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
+
+                    var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
+                        (decimal)entryPrice, TradeDirection.Long, (decimal)candles[candles.Count - 1].Close,
+                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
+                    trade.Strategies = "8EmaBounce2";
+
+                    return new List<Trade> { trade };
+                }
+            }
+
+            return null;
         }
 
         private enum Trend
@@ -88,9 +102,9 @@ namespace AutomatedTraderDesigner
             None
         }
 
-        private bool IsBigCandleInTrendDirection(List<BasicCandleAndIndicators> candles, Trend trend)
+        private bool IsBigCandleInTrendDirection(List<BasicCandleAndIndicators> candles, Trend trend, int candleOffset)
         {
-            var c = candles[candles.Count - 1];
+            var c = candles[candles.Count - 1 - candleOffset];
 
             if (trend == Trend.Down)
             {
@@ -109,13 +123,13 @@ namespace AutomatedTraderDesigner
             return false;
         }
 
-        private Trend GetTrend(List<BasicCandleAndIndicators> candles)
+        private Trend GetTrend(List<BasicCandleAndIndicators> candles, int candleOffset)
         {
             if (candles.Count < 20) return Trend.None;
 
             // Last candles must be trending
             var ret = Trend.None;
-            for (var i = candles.Count - MinTrendingCandles; i < candles.Count; i++)
+            for (var i = candles.Count - MinTrendingCandles - candleOffset; i < candles.Count - candleOffset; i++)
             {
                 var c = candles[i];
                 var atr = c[Indicator.ATR].Value * MinEMATrendATRRatio;

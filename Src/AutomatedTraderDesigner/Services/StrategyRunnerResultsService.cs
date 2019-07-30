@@ -11,19 +11,19 @@ namespace AutomatedTraderDesigner.Services
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class StrategyRunnerResultsService
     {
-        private Subject<List<TradeDetails>> _testResultsUpdated = new Subject<List<TradeDetails>>();
+        private Subject<List<Trade>> _testResultsUpdated = new Subject<List<Trade>>();
 
-        public IObservable<List<TradeDetails>> TestResultsUpdated => _testResultsUpdated.AsObservable();
+        public IObservable<List<Trade>> TestResultsUpdated => _testResultsUpdated.AsObservable();
 
-        private Subject<List<TradeDetails>> _testRunCompleted = new Subject<List<TradeDetails>>();
+        private Subject<List<Trade>> _testRunCompleted = new Subject<List<Trade>>();
 
-        private Subject<List<TradeDetails>> _testRunStarted = new Subject<List<TradeDetails>>();
+        private Subject<List<Trade>> _testRunStarted = new Subject<List<Trade>>();
 
-        public IObservable<List<TradeDetails>> TestRunCompleted => _testRunCompleted.AsObservable();
+        public IObservable<List<Trade>> TestRunCompleted => _testRunCompleted.AsObservable();
 
-        public IObservable<List<TradeDetails>> TestRunStarted => _testRunStarted.AsObservable();
+        public IObservable<List<Trade>> TestRunStarted => _testRunStarted.AsObservable();
 
-        public void AddResult(List<TradeDetails> result)
+        public void AddResult(List<Trade> result)
         {
             lock (Results)
             {
@@ -50,9 +50,9 @@ namespace AutomatedTraderDesigner.Services
                 Results.Clear();
             }
 
-            _testResultsUpdated.OnNext(new List<TradeDetails>());
+            _testResultsUpdated.OnNext(new List<Trade>());
         }
 
-        public List<TradeDetails> Results { get; } = new List<TradeDetails>();
+        public List<Trade> Results { get; } = new List<Trade>();
     }
 }

@@ -61,7 +61,7 @@ namespace AutomatedTraderDesigner.ViewModels
             var savedResultsPath = Path.Combine(BrokersService.DataDirectory, @"StrategyTester\StrategyTesterResults.json");
             if (File.Exists(savedResultsPath))
             {
-                var results = JsonConvert.DeserializeObject<List<TradeDetails>>(File.ReadAllText(savedResultsPath));
+                var results = JsonConvert.DeserializeObject<List<Trade>>(File.ReadAllText(savedResultsPath));
                 _results.AddResult(results);
                 _results.RaiseTestRunCompleted();
             }

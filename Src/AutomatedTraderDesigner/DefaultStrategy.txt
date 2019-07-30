@@ -22,7 +22,7 @@ namespace AutomatedTraderDesigner
             };
         }
 
-        public List<TradeDetails> CreateNewTrades(Timeframe timeframe, MarketDetails market,
+        public List<TradeDetails> CreateNewTrades(MarketDetails market,
             TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<TradeDetails> existingTrades, ITradeDetailsAutoCalculatorService calculator)
         {
             return null;
