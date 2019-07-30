@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using AutomatedTraderDesigner;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
@@ -18,19 +18,6 @@ using TraderTools.Core.UI.Services;
 
 namespace AutomatedTrader.ViewModels
 {
-    public enum DisplayPages
-    {
-        Markets,
-        CryptoTradeLog,
-        RunStrategy,
-        RunStrategyResults,
-        RunCustomStrategy,
-        StrategyAlerts,
-        CryptoSummary,
-        CryptoBalances,
-        PatternSetups
-    }
-
     public class MainWindowsViewModel : INotifyPropertyChanged
     {
         #region Fields
@@ -41,7 +28,9 @@ namespace AutomatedTrader.ViewModels
         [Import] private StrategyService _strategyService;
         [Import] private IBrokersCandlesService _candleService;
         [Import] private MarketsService _marketsService;
+        [Import] private ITradeDetailsAutoCalculatorService _calculatorService;
         private bool _updatingCandles;
+        private string _strategiesDirectory;
 
         [Import] public UIService UIService { get; private set; }
 
@@ -56,6 +45,8 @@ namespace AutomatedTrader.ViewModels
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
 
+            _strategiesDirectory = Path.Combine(BrokersService.DataDirectory, "StrategyTester");
+
             var fxcm = new FxcmBroker();
             var brokers = new IBroker[]
             {
@@ -64,8 +55,38 @@ namespace AutomatedTrader.ViewModels
 
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
+            _brokersService.LoadBrokerAccounts(_candleService, _calculatorService);
+
+            UpdateStrategiesService();
 
             Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
+        }
+
+        private void UpdateStrategiesService()
+        {
+            _strategyService.ClearStrategies();
+            foreach (var strategyFilename in GetStrategyFilenames())
+            {
+                var path = Path.Combine(_strategiesDirectory, $"{strategyFilename}.txt");
+
+                if (File.Exists(path))
+                {
+                    var code = File.ReadAllText(path);
+                    _strategyService.RegisterStrategy(code);
+                }
+            }
+        }
+
+        private List<string> GetStrategyFilenames()
+        {
+            var ret = new List<string>();
+            var strategyPaths = Directory.GetFiles(_strategiesDirectory, "*.txt");
+            foreach (var strategyPath in strategyPaths)
+            {
+                ret.Add(Path.GetFileNameWithoutExtension(strategyPath));
+            }
+
+            return ret;
         }
 
         private void UpdateTickData()

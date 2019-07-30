@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using Abt.Controls.SciChart.Visuals;
+using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Core.Services;
@@ -27,6 +28,7 @@ namespace AutomatedTrader
             DependencyContainer.AddAssembly(typeof(App).Assembly);
             DependencyContainer.AddAssembly(typeof(BrokersService).Assembly);
             DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
+            DependencyContainer.AddAssembly(typeof(UIService).Assembly);
         }
     }
 }
