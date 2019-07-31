@@ -8,7 +8,7 @@
         xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
         xmlns:viewModels1="clr-namespace:AutomatedTraderDesigner.ViewModels;assembly=AutomatedTraderDesigner"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1350">
+        Title="Automated trader" Height="900" Width="1350">
     <Grid>
         <Grid.Resources>
             <converters:ObjectToVisibilityConverter x:Key="ObjToVis"/>

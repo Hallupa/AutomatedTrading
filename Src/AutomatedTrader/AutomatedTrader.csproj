@@ -132,6 +132,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />
+    <Compile Include="ViewModels\StrategyRunLiveResultsViewModel.cs" />
+    <Compile Include="ViewModels\StrategyRunLiveViewModel.cs" />
+    <Compile Include="Views\StrategyRunLiveResultsView.xaml.cs">
+      <DependentUpon>StrategyRunLiveResultsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StrategyRunLiveView.xaml.cs">
+      <DependentUpon>StrategyRunLiveView.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -144,6 +152,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\StrategyRunLiveResultsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\StrategyRunLiveView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

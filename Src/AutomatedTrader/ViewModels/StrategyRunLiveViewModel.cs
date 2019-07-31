@@ -176,7 +176,7 @@ namespace AutomatedTrader.ViewModels
                     var openTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
 
                     // Create new trades for market
-                    var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market), candles, openTrades);
+                    var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market), candles, openTrades, _tradeCalculatorService);
                     if (newTrades != null && newTrades.Count > 0)
                     {
                         foreach (var trade in newTrades)
