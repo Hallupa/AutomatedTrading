@@ -70,13 +70,27 @@ namespace AutomatedTraderDesigner.ViewModels
             SaveCacheCommand = new DelegateCommand(o => SaveCache(), o => _saveCacheEnabled);
             LoadCacheCommand = new DelegateCommand(o => LoadCache());
             ClearCachedTradesCommand = new DelegateCommand(o => ClearCachedTrades());
-            Strategies = StrategyService.Strategies.ToList();
+            StrategiesUpdated(null);
             _strategiesUpdatedDisposable = StrategyService.UpdatedObservable.Subscribe(StrategiesUpdated);
         }
 
         private void StrategiesUpdated(object obj)
         {
+            var selectedStrategyNames = SelectedStrategies.Cast<IStrategy>().Select(s => s.Name).ToList();
+
+            SelectedStrategies.Clear();
             Strategies = StrategyService.Strategies.ToList();
+
+            foreach (var selectedStrategyName in selectedStrategyNames)
+            {
+                var newSelectedStrategy = Strategies.FirstOrDefault(s => s.Name == selectedStrategyName);
+                if (newSelectedStrategy != null && SelectedStrategies.Cast<IStrategy>().All(s => s.Name != selectedStrategyName))
+                {
+                    SelectedStrategies.Add(newSelectedStrategy);
+                }
+            }
+
+            OnPropertyChanged("SelectedStrategies");
         }
 
         private void ClearCachedTrades()
@@ -236,7 +250,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
             _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
             {
-                var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService);
+                var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService, _marketDetailsService);
                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
                 var latest = !string.IsNullOrEmpty(EndDate) ? (DateTime?)DateTime.Parse(EndDate) : null;
                 var result = strategyTester.Run(d.Strategy, d.Market, broker,

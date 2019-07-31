@@ -35,7 +35,7 @@ namespace AutomatedTraderDesigner
         }
 
         public override List<Trade> CreateNewTrades(
-            MarketDetails market, TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<Trade> existingTrades)
+            MarketDetails market, TimeframeLookup<List<BasicCandleAndIndicators>> candlesLookup, List<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService)
         {
             var candles = candlesLookup[TargetTimeframe];
             if (candles.Count < 20) return null;
@@ -43,6 +43,8 @@ namespace AutomatedTraderDesigner
 
             for (var candleOffset = 0; candleOffset <= 1; candleOffset++)
             {
+                if (candleOffset > 0 && candles[candleOffset - 1].IsComplete == 1) return null;
+
                 var candle = candles[candles.Count - 1 - candleOffset];
 
                 if (!candle[Indicator.EMA8].IsFormed || !candle[Indicator.EMA25].IsFormed ||
@@ -61,16 +63,10 @@ namespace AutomatedTraderDesigner
                     var stop = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * StopAtrRatio;
                     var limit = entryPrice - (stop - entryPrice) * LimitRMultiple;
 
-                    var stopPips = PipsHelper.GetPriceInPips((decimal)Math.Abs(stop - entryPrice),
-                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
-
-                    var limitpips = PipsHelper.GetPriceInPips((decimal)Math.Abs(limit - entryPrice),
-                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
-
                     var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
                         (decimal)entryPrice, TradeDirection.Short, (decimal)candles[candles.Count - 1].Close,
                         candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
-                    trade.Strategies = "8EmaBounce2";
+                    trade.Strategies = "TrendStrategy2";
 
                     return new List<Trade> { trade };
                 }
@@ -80,13 +76,10 @@ namespace AutomatedTraderDesigner
                     var stop = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * StopAtrRatio;
                     var limit = entryPrice + (entryPrice - stop) * LimitRMultiple;
 
-                    var stopPips = PipsHelper.GetPriceInPips((decimal)Math.Abs(stop - entryPrice),
-                        _marketDetailsService.GetMarketDetails("FXCM", market.Name));
-
                     var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
                         (decimal)entryPrice, TradeDirection.Long, (decimal)candles[candles.Count - 1].Close,
                         candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
-                    trade.Strategies = "8EmaBounce2";
+                    trade.Strategies = "TrendStrategy2";
 
                     return new List<Trade> { trade };
                 }
