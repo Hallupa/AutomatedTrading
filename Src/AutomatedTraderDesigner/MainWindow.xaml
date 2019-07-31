@@ -9,7 +9,7 @@
         xmlns:viewModels1="clr-namespace:AutomatedTraderDesigner.ViewModels"
         xmlns:views="clr-namespace:AutomatedTraderDesigner.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="900" Width="1350" WindowStartupLocation="CenterScreen">
+        Title="Strategy designer" Height="900" Width="1350" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.Resources>
             <converters:ObjectToVisibilityConverter x:Key="ObjToVis"/>

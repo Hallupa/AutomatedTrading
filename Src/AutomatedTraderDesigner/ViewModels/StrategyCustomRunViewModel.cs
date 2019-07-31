@@ -86,7 +86,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
         private void UpdateStrategiesService()
         {
-            _strategyService.ClearStrategies();
+            _strategyService.ClearStrategies(false);
             foreach (var strategyFilename in StrategyFilenames)
             {
                 var path = Path.Combine(_strategiesDirectory, $"{strategyFilename}.txt");
@@ -94,14 +94,12 @@ namespace AutomatedTraderDesigner.ViewModels
                 if (File.Exists(path))
                 {
                     var code = File.ReadAllText(path);
-                    //_strategyService.RegisterStrategy(code);
+                    _strategyService.RegisterStrategy(code, false);
                 }
             }
 
-            _strategyService.RegisterStrategy(new SampleStrategy());
-            _strategyService.RegisterStrategy(new SampleStrategy2());
-
             _strategyService.SetStrategiesToUseRiskSizing(false);
+            _strategyService.NotifyStrategiesChanged();
         }
 
         private void LoadDefaultStrategyText()
