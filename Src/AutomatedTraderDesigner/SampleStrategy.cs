@@ -43,12 +43,12 @@ namespace AutomatedTraderDesigner
 
             for (var candleOffset = 0; candleOffset <= 1; candleOffset++)
             {
-                if (candleOffset > 0 && candles[candleOffset - 1].IsComplete == 1) return null;
+                if (candleOffset > 0 && candles[candles.Count - 1 - candleOffset + 1].IsComplete == 1) return null;
 
                 var candle = candles[candles.Count - 1 - candleOffset];
                 if (!candle[Indicator.EMA8].IsFormed || !candle[Indicator.EMA25].IsFormed || !candle[Indicator.EMA50].IsFormed || candle.IsComplete != 1) continue;
 
-                if (candle.CloseTimeTicks > candles[candles.Count - 1].CloseTimeTicks + TimeSpan.FromMinutes(15).Ticks) continue;
+                if (candleOffset > 0 && candle.CloseTimeTicks < DateTime.UtcNow.Ticks - TimeSpan.FromMinutes(20).Ticks) continue;
 
                 var trend = GetTrend(candles, candleOffset);
                 if (trend == Trend.None) continue;
@@ -62,7 +62,7 @@ namespace AutomatedTraderDesigner
                     var limit = entryPrice - (stop - entryPrice) * LimitRMultiple;
                     var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
                         (decimal)entryPrice, TradeDirection.Short, (decimal)candles[candles.Count - 1].Close,
-                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
+                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.0005M);
                     trade.Strategies = "TrendStrategy1";
 
                     return new List<Trade> { trade };
@@ -74,7 +74,7 @@ namespace AutomatedTraderDesigner
                     var limit = entryPrice + (entryPrice - stop) * LimitRMultiple;
                     var trade = CreateOrder(market.Name, candle.CloseTime().AddSeconds((int)TargetTimeframe * 4),
                         (decimal)entryPrice, TradeDirection.Long, (decimal)candles[candles.Count - 1].Close,
-                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.1M);
+                        candles[candles.Count - 1].CloseTime(), (decimal)limit, (decimal)stop, 0.0005M);
                     trade.Strategies = "TrendStrategy1";
 
                     return new List<Trade> { trade };

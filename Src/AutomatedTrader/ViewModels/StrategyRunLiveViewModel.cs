@@ -3,19 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using System.Windows.Threading;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
-using Newtonsoft.Json;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Broker;
@@ -144,11 +140,12 @@ namespace AutomatedTrader.ViewModels
                     {
                         var value = indicator.Item2.Process(simpleCandle);
                         basicCandleWithIndicators.Set(indicator.Item1, value);
-                        candlesAndIndicators.Add(basicCandleWithIndicators);
                     }
 
-                    ret.Add(timeframeWithIndicators.Key, candlesAndIndicators);
+                    candlesAndIndicators.Add(basicCandleWithIndicators);
                 }
+
+                ret.Add(timeframeWithIndicators.Key, candlesAndIndicators);
             }
 
             return ret;
@@ -162,41 +159,59 @@ namespace AutomatedTrader.ViewModels
 
             _dispatcher.Invoke(() => RunStrategyEnabled = false);
 
-            // Update account
-            UpdateAccount();
+            var runIntervalMinutes = 5;
 
-            foreach (var strategy in strategies)
-            {
-                foreach (var market in markets)
+            while(true)
+            { 
+                Log.Info("Running strategies");
+
+                // Update account
+                Log.Info("Updating account");
+                UpdateAccount();
+
+                Log.Info("Running strategies");
+
+                foreach (var strategy in strategies)
                 {
-                    // Update candles
-                    var candles = PopulateCandles(strategy, market);
-
-                    // Get existing open trades for market
-                    var openTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
-
-                    // Create new trades for market
-                    var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market), candles, openTrades, _tradeCalculatorService);
-                    if (newTrades != null && newTrades.Count > 0)
+                    foreach (var market in markets)
                     {
-                        foreach (var trade in newTrades)
+                        // Update candles
+                        var candles = PopulateCandles(strategy, market);
+
+                        // Get existing open trades for market
+                        var openTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
+
+                        // Create new trades for market
+                        var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market),
+                            candles, openTrades, _tradeCalculatorService);
+                        if (newTrades != null && newTrades.Count > 0)
                         {
-                            if (trade.OrderPrice != null && trade.OrderAmount != null && trade.TradeDirection != null)
+                            foreach (var trade in newTrades)
                             {
-                                if (_broker.CreateOrder(trade.Market, (double)trade.OrderPrice.Value, trade.OrderExpireTime,
-                                    trade.OrderAmount.Value, trade.TradeDirection.Value, _candlesService,
-                                    _marketDetailsService))
+                                if (trade.OrderPrice != null && trade.OrderAmount != null && trade.TradeDirection != null)
                                 {
-                                    Log.Info($"Order created for {trade.Market}");
-                                }
-                                else
-                                {
-                                    Log.Error($"Unable to create order for {trade.Market}");
+                                    if (_broker.CreateOrder(trade.Market, (double) trade.OrderPrice.Value,
+                                        trade.StopPrice != null ? (double?) trade.StopPrice.Value : null,
+                                        trade.LimitPrice != null ? (double?) trade.LimitPrice.Value : null,
+                                        trade.OrderExpireTime,
+                                        trade.OrderAmount.Value, trade.TradeDirection.Value, _candlesService,
+                                        _marketDetailsService))
+                                    {
+                                        Log.Info($"Order created for {trade.Market}");
+                                    }
+                                    else
+                                    {
+                                        Log.Error($"Unable to create order for {trade.Market}");
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                Log.Info("Running strategies completed - waiting for next run");
+
+                Thread.Sleep(1000 * 60 * runIntervalMinutes);
             }
 
             _dispatcher.Invoke(() => RunStrategyEnabled = true);
