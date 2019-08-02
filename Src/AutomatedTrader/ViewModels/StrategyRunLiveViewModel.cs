@@ -117,6 +117,7 @@ namespace AutomatedTrader.ViewModels
 
         private TimeframeLookupBasicCandleAndIndicators PopulateCandles(IStrategy strategy, string market)
         {
+            Log.Info("Updating candles");
             var maxIndex = 30;
             var ret = new TimeframeLookupBasicCandleAndIndicators();
             var timeframesWithIndicators = strategy.CreateTimeframeIndicators();
@@ -126,7 +127,7 @@ namespace AutomatedTrader.ViewModels
             {
                 if (timeframeWithIndicators.Value == null) continue;
 
-                var candles = _candlesService.GetCandles(_broker, market, timeframeWithIndicators.Key, true, cacheData: false);
+                var candles = _candlesService.GetCandles(_broker, market, timeframeWithIndicators.Key, true, cacheData: false, forceUpdate: true);
                 var candlesAndIndicators = new List<BasicCandleAndIndicators>();
 
                 foreach (var candle in candles)
@@ -175,15 +176,17 @@ namespace AutomatedTrader.ViewModels
                 {
                     foreach (var market in markets)
                     {
+                        Log.Info($"Running for strategy: {strategy.Name} market: {market}");
+
                         // Update candles
                         var candles = PopulateCandles(strategy, market);
 
                         // Get existing open trades for market
-                        var openTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
+                        var previousTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
 
                         // Create new trades for market
                         var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market),
-                            candles, openTrades, _tradeCalculatorService);
+                            candles, previousTrades, _tradeCalculatorService);
                         if (newTrades != null && newTrades.Count > 0)
                         {
                             foreach (var trade in newTrades)
@@ -289,7 +292,7 @@ namespace AutomatedTrader.ViewModels
 
         private void UpdateAccount()
         {
-            _brokerAccount.UpdateBrokerAccount(_broker, _candlesService, _marketDetailsService, _tradeCalculatorService);
+            _brokerAccount.UpdateBrokerAccount(_broker, _candlesService, _marketDetailsService, _tradeCalculatorService, BrokerAccount.UpdateOption.ForceUpdate);
             _brokerAccount.SaveAccount(BrokersService.DataDirectory);
         }
 
