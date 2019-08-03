@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
@@ -40,6 +42,7 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private StrategyService _strategyService;
         [Import] private IBrokersCandlesService _candleService;
         [Import] private MarketsService _marketsService;
+        [Import] private UIService _uiService;
         private bool _updatingCandles;
 
         [Import] public UIService UIService { get; private set; }
@@ -65,7 +68,17 @@ namespace AutomatedTraderDesigner.ViewModels
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
 
-            Task.Run(() => Start()); // If DLL binding errors, fix is to build in 64 bit
+            Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
+
+            EventManager.RegisterClassHandler(typeof(Window), Keyboard.KeyDownEvent, new KeyEventHandler(UIElement_OnPreviewKeyDown), true);
+        }
+
+        private void UIElement_OnPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F5)
+            {
+                _uiService.RaiseF5Pressed();
+            }
         }
 
         private void UpdateTickData()
@@ -175,8 +188,10 @@ namespace AutomatedTraderDesigner.ViewModels
                     new ProducerConsumer<(string Market, Timeframe Timeframe)>(3,
                         data =>
                         {
+                            Log.Info($"Updating {data.Timeframe} candles for {data.Market}");
                             _candleService.UpdateCandles(fxcm, data.Market, data.Timeframe);
                             _candleService.UnloadCandles(data.Market, data.Timeframe, fxcm);
+                            Log.Info($"Updated {data.Timeframe} candles for {data.Market}");
                             return ProducerConsumerActionResult.Success;
                         });
 
@@ -184,7 +199,7 @@ namespace AutomatedTraderDesigner.ViewModels
                 foreach (var market in _marketsService.GetMarkets())
                 {
                     foreach (var timeframe in new[]
-                        {Timeframe.D1, Timeframe.H8, Timeframe.H4, Timeframe.H2, Timeframe.M1, Timeframe.M15})
+                        {Timeframe.D1, Timeframe.H8, Timeframe.H4, Timeframe.H2, Timeframe.H1, Timeframe.M1, Timeframe.M15})
                     {
                         producerConsumer.Add((market.Name, timeframe));
                     }

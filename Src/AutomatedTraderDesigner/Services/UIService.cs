@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Reactive.Linq;
@@ -17,6 +18,7 @@ namespace AutomatedTraderDesigner.Services
         private DisplayPages _selectedDisplayPage = DisplayPages.RunStrategy;
         private Subject<UIService> _viewTradeObservable;
         private Subject<UIService> _viewTradeSetupObservable;
+        private List<Action> _f5Actions = new List<Action>();
 
         public UIService()
         {
@@ -51,6 +53,26 @@ namespace AutomatedTraderDesigner.Services
 
                 _selectedDisplayPage = value.Value;
                 OnPropertyChanged();
+            }
+        }
+
+        public void RegisterF5Action(Action action, bool placeFirst = false)
+        {
+            if (placeFirst)
+            {
+                _f5Actions.Insert(0, action);
+            }
+            else
+            {
+                _f5Actions.Add(action);
+            }
+        }
+
+        public void RaiseF5Pressed()
+        {
+            foreach (var action in _f5Actions)
+            {
+                action();
             }
         }
 

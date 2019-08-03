@@ -157,6 +157,7 @@ namespace AutomatedTrader.ViewModels
             Log.Info("Running live");
             var strategies = SelectedStrategies.Cast<IStrategy>().ToList();
             var markets = SelectedMarkets.Cast<string>().ToList();
+            var newTradesMarkets = new List<(string Market, string Strategy)>();
 
             _dispatcher.Invoke(() => RunStrategyEnabled = false);
 
@@ -168,7 +169,8 @@ namespace AutomatedTrader.ViewModels
 
                 // Update account
                 Log.Info("Updating account");
-                UpdateAccount();
+                UpdateAccount(newTradesMarkets);
+                newTradesMarkets.Clear();
 
                 Log.Info("Running strategies");
 
@@ -191,6 +193,8 @@ namespace AutomatedTrader.ViewModels
                         {
                             foreach (var trade in newTrades)
                             {
+                                trade.Strategies = strategy.Name;
+
                                 if (trade.OrderPrice != null && trade.OrderAmount != null && trade.TradeDirection != null)
                                 {
                                     if (_broker.CreateOrder(trade.Market, (double) trade.OrderPrice.Value,
@@ -200,6 +204,7 @@ namespace AutomatedTrader.ViewModels
                                         trade.OrderAmount.Value, trade.TradeDirection.Value, _candlesService,
                                         _marketDetailsService))
                                     {
+                                        newTradesMarkets.Add((trade.Market, strategy.Name));
                                         Log.Info($"Order created for {trade.Market}");
                                     }
                                     else
@@ -290,9 +295,21 @@ namespace AutomatedTrader.ViewModels
             }));*/
         }
 
-        private void UpdateAccount()
+        private void UpdateAccount(List<(string Market, string Strategy)> newTrades = null)
         {
             _brokerAccount.UpdateBrokerAccount(_broker, _candlesService, _marketDetailsService, _tradeCalculatorService, BrokerAccount.UpdateOption.ForceUpdate);
+
+            var orderedTrades = _brokerAccount.Trades.OrderByDescending(t => t.Id).ToList();
+
+            foreach (var newTrade in newTrades)
+            {
+                var trade = orderedTrades.FirstOrDefault(t => t.Market == newTrade.Market);
+                if (trade != null)
+                {
+                    trade.Strategies = newTrade.Strategy;
+                }
+            }
+
             _brokerAccount.SaveAccount(BrokersService.DataDirectory);
         }
 

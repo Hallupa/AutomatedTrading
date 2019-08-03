@@ -36,10 +36,10 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private StrategyService _strategyService;
         [Import] private IMarketDetailsService _marketDetailsService;
         [Import] private ITradeDetailsAutoCalculatorService _tradeCalculatorService;
+        [Import] private UIService _uiService;
         private bool _runStrategyEnabled = true;
         private Dispatcher _dispatcher;
         private ProducerConsumer<(IStrategy Strategy, MarketDetails Market)> _producerConsumer;
-        private bool _saveCacheEnabled = true;
         private IDisposable _strategiesUpdatedDisposable;
         private List<IStrategy> _strategies;
         public static string CustomCode { get; set; }
@@ -67,11 +67,10 @@ namespace AutomatedTraderDesigner.ViewModels
             }
 
             RunStrategyCommand = new DelegateCommand(RunStrategyClicked);
-            SaveCacheCommand = new DelegateCommand(o => SaveCache(), o => _saveCacheEnabled);
-            LoadCacheCommand = new DelegateCommand(o => LoadCache());
             ClearCachedTradesCommand = new DelegateCommand(o => ClearCachedTrades());
             StrategiesUpdated(null);
             _strategiesUpdatedDisposable = StrategyService.UpdatedObservable.Subscribe(StrategiesUpdated);
+            _uiService.RegisterF5Action(() => RunStrategyClicked(null));
         }
 
         private void StrategiesUpdated(object obj)
@@ -109,68 +108,7 @@ namespace AutomatedTraderDesigner.ViewModels
             }
         }
 
-        private void SaveCache()
-        {
-            /*_saveCacheEnabled = false;
-            SaveCacheCommand.RaiseCanExecuteChanged();
-            Log.Info("Saving cache");
 
-            Task.Run(() =>
-            {
-                // Save candles
-                var path = "";
-                using (var memoryStream = new MemoryStream())
-                using (var compressionStream = new GZipStream(memoryStream, CompressionMode.Compress))
-                using (var sw = new BinaryWriter(compressionStream))
-                {
-                    foreach (var marketTimeframeAndCandles in StrategyRunner.Cache.CandlesLookup)
-                    {
-                        sw.Write(marketTimeframeAndCandles.Key);
-
-                        foreach (var timeframeAndCandles in marketTimeframeAndCandles.Value)
-                        {
-                            sw.Write((int)timeframeAndCandles.Key);
-                            var count = timeframeAndCandles.Value.Count;
-                            sw.Write(count);
-
-                            for (var i = 0; i < count; i++)
-                            {
-                                timeframeAndCandles.Value[i].Serialise(sw);
-                            }
-                        }
-                    }
-                }
-
-                var cacheTmpPath = Path.Combine(BrokersService.DataDirectory, "StrategyTester\\StrategyTesterCache_tmp.dat");
-                var cacheFinalPath = Path.Combine(BrokersService.DataDirectory, "StrategyTester\\StrategyTesterCache.dat");
-
-                if (File.Exists(cacheTmpPath))
-                {
-                    File.Delete(cacheTmpPath);
-                }
-
-                File.WriteAllBytes(cacheTmpPath, ZeroFormatterSerializer.Serialize(StrategyRunner.Cache));
-
-                if (File.Exists(cacheFinalPath))
-                {
-                    File.Delete(cacheFinalPath);
-                }
-
-                File.Move(cacheTmpPath, cacheFinalPath);
-
-                _dispatcher.Invoke(() =>
-                {
-                    _saveCacheEnabled = true;
-                    SaveCacheCommand.RaiseCanExecuteChanged();
-                });
-
-                Log.Info("Saved cache");
-            });*/
-        }
-
-        private void LoadCache()
-        {
-        }
 
         #endregion
 
@@ -184,8 +122,6 @@ namespace AutomatedTraderDesigner.ViewModels
         public List<object> SelectedMarkets { get; set; } = new List<object>();
         public string StartDate { get; set; }
         public string EndDate { get; set; }
-        public DelegateCommand SaveCacheCommand { get; private set; }
-        public DelegateCommand LoadCacheCommand { get; private set; }
         public DelegateCommand ClearCachedTradesCommand { get; private set; }
         public bool UpdatePrices { get; set; }
 

@@ -23,6 +23,7 @@ namespace AutomatedTraderDesigner.ViewModels
         private string _codeText;
         [Import] private StrategyRunnerResultsService _results;
         [Import] private StrategyService _strategyService;
+        [Import] private UIService _uiService;
         private IDisposable _testResultsUpdatedObserver;
         private string _selectedStrategyFilename;
         private string _defaultStrategyText;
@@ -67,6 +68,12 @@ namespace AutomatedTraderDesigner.ViewModels
                 ResultsViewModel.UpdateResults();
                 Log.Info("Updated strategy run results");
             });
+
+            _uiService.RegisterF5Action(() =>
+            {
+                Save();
+                UpdateStrategiesService();
+            }, true);
         }
 
         private void DeleteStrategy()
