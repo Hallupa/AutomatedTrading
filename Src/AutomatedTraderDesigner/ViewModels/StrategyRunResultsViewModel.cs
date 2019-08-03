@@ -25,7 +25,7 @@ namespace AutomatedTraderDesigner.ViewModels
         public StrategyRunResultsViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
-            LargeChartTimeframe = Timeframe.M1;
+            LargeChartTimeframe = Timeframe.H1;
             UpdateCandlesOnViewTrade = false;
 
             DependencyContainer.ComposeParts(this);

@@ -135,8 +135,6 @@
     <Content Include="DefaultStrategy.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="SampleStrategy.cs" />
-    <Compile Include="SampleStrategy2.cs" />
     <Compile Include="Services\StrategyRunnerResultsService.cs" />
     <Compile Include="Services\UIService.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />

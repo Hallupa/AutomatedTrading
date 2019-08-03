@@ -132,14 +132,13 @@ namespace AutomatedTrader.ViewModels
 
                 foreach (var candle in candles)
                 {
-                    var simpleCandle = new SimpleCandle(candle);
                     var basicCandleWithIndicators = new BasicCandleAndIndicators(candle, maxIndex);
 
                     var timeframeLookupIndex = TimeframeLookup<int>.GetLookupIndex(timeframeWithIndicators.Key);
 
                     foreach (var indicator in indicators[timeframeLookupIndex])
                     {
-                        var value = indicator.Item2.Process(simpleCandle);
+                        var value = indicator.Item2.Process(candle);
                         basicCandleWithIndicators.Set(indicator.Item1, value);
                     }
 
