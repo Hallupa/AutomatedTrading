@@ -37,11 +37,14 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private IMarketDetailsService _marketDetailsService;
         [Import] private ITradeDetailsAutoCalculatorService _tradeCalculatorService;
         [Import] private UIService _uiService;
+        [Import] private DataDirectoryService _dataDirectoryService;
+
         private bool _runStrategyEnabled = true;
         private Dispatcher _dispatcher;
         private ProducerConsumer<(IStrategy Strategy, MarketDetails Market)> _producerConsumer;
         private IDisposable _strategiesUpdatedDisposable;
         private List<IStrategy> _strategies;
+        private string _savedResultsPath;
         public static string CustomCode { get; set; }
 
         #endregion
@@ -58,10 +61,10 @@ namespace AutomatedTraderDesigner.ViewModels
             Markets = new ObservableCollection<string>(_marketsService.GetMarkets().Select(m => m.Name).OrderBy(x => x));
 
             // Load existing results
-            var savedResultsPath = Path.Combine(BrokersService.DataDirectory, @"StrategyTester\StrategyTesterResults.json");
-            if (File.Exists(savedResultsPath))
+            _savedResultsPath = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName, "StrategyTesterResults.json");
+            if (File.Exists(_savedResultsPath))
             {
-                var results = JsonConvert.DeserializeObject<List<Trade>>(File.ReadAllText(savedResultsPath));
+                var results = JsonConvert.DeserializeObject<List<Trade>>(File.ReadAllText(_savedResultsPath));
                 _results.AddResult(results);
                 _results.RaiseTestRunCompleted();
             }
@@ -226,12 +229,11 @@ namespace AutomatedTraderDesigner.ViewModels
             Log.Info($"Found {expectedTrades} - matched {expectedTradesFound}");
 
             // Save results
-            var savedResulsPath = Path.Combine(BrokersService.DataDirectory, @"StrategyTester\StrategyTesterResults.json");
-            if (File.Exists(savedResulsPath))
+            if (File.Exists(_savedResultsPath))
             {
-                File.Delete(savedResulsPath);
+                File.Delete(_savedResultsPath);
             }
-            File.WriteAllText(savedResulsPath, JsonConvert.SerializeObject(_results.Results));
+            File.WriteAllText(_savedResultsPath, JsonConvert.SerializeObject(_results.Results));
 
             _dispatcher.Invoke((Action)(() =>
             {

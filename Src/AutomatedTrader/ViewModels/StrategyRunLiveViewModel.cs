@@ -223,75 +223,6 @@ namespace AutomatedTrader.ViewModels
 
             _dispatcher.Invoke(() => RunStrategyEnabled = true);
             Log.Info("Finished running");
-
-
-            /*var markets = SelectedMarkets.Cast<string>().ToList();
-            _results.Reset();
-
-            _dispatcher.Invoke((Action)(() =>
-            {
-                _results.RaiseTestRunStarted();
-
-                RunStrategyEnabled = false;
-            }));
-
-            var completed = 0;
-            var expectedTrades = 0;
-            var expectedTradesFound = 0;*/
-
-            /*_producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
-             {
-                 var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService);
-                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
-                 var latest = !string.IsNullOrEmpty(EndDate) ? (DateTime?)DateTime.Parse(EndDate) : null;
-                 var result = strategyTester.Run(d.Strategy, d.Market, broker,
-                     out var expegtedTradesForMarket, out var expectedTradesForMarketFound,
-                     earliest, latest, updatePrices: UpdatePrices);
-
-                 Interlocked.Add(ref expectedTrades, expegtedTradesForMarket);
-                 Interlocked.Add(ref expectedTradesFound, expectedTradesForMarketFound);
-
-                 if (result != null)
-                 {
-                     _results.AddResult(result);
-
-                     // Adding trades to UI in realtime slows down the UI too much with strategies with many trades
-
-                     completed++;
-                     Log.Info($"Completed {completed}/{markets.Count * strategies.Count}");
-                 }
-
-                 return ProducerConsumerActionResult.Success;
-             });
-
-             foreach (var market in markets)
-             {
-                 foreach (var strategy in strategies.Cast<IStrategy>())
-                 {
-                     _producerConsumer.Add((strategy, _marketDetailsService.GetMarketDetails(broker.Name, market)));
-                 }
-             }
-
-             _producerConsumer.Start();
-             _producerConsumer.SetProducerCompleted();
-             _producerConsumer.WaitUntilConsumersFinished();*/
-
-            /*Log.Info($"Found {expectedTrades} - matched {expectedTradesFound}");
-
-            // Save results
-            var savedResulsPath = Path.Combine(BrokersService.DataDirectory, @"StrategyTester\StrategyTesterResults.json");
-            if (File.Exists(savedResulsPath))
-            {
-                File.Delete(savedResulsPath);
-            }
-            File.WriteAllText(savedResulsPath, JsonConvert.SerializeObject(_results.Results));
-
-            _dispatcher.Invoke((Action)(() =>
-            {
-                _results.RaiseTestRunCompleted();
-
-                RunStrategyEnabled = true;
-            }));*/
         }
 
         private void UpdateAccount(List<(string Market, string Strategy)> newTrades = null)
@@ -309,7 +240,7 @@ namespace AutomatedTrader.ViewModels
                 }
             }
 
-            _brokerAccount.SaveAccount(BrokersService.DataDirectory);
+            _brokerAccount.SaveAccount();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

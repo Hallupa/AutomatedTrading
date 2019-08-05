@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Windows;
 using Abt.Controls.SciChart.Visuals;
@@ -17,16 +16,19 @@ namespace AutomatedTraderDesigner
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        [Import] private DataDirectoryService _dataDirectoryService;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             Log.Info("Starting application");
 
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"AutomatedTrader");
-            BrokersService.DataDirectory = path;
-
             DependencyContainer.AddAssembly(typeof(App).Assembly);
             DependencyContainer.AddAssembly(typeof(BrokersService).Assembly);
             DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
+
+            DependencyContainer.ComposeParts(this);
+
+            _dataDirectoryService.SetApplicationName("AutomatedTrader");
         }
     }
 }

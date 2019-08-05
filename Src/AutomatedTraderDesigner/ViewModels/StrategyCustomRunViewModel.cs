@@ -24,6 +24,8 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private StrategyRunnerResultsService _results;
         [Import] private StrategyService _strategyService;
         [Import] private UIService _uiService;
+        [Import] private DataDirectoryService _dataDirectoryService;
+
         private IDisposable _testResultsUpdatedObserver;
         private string _selectedStrategyFilename;
         private string _defaultStrategyText;
@@ -38,7 +40,12 @@ namespace AutomatedTraderDesigner.ViewModels
             });
             CreateStrategyCommand = new DelegateCommand(o => CreateStrategy());
             DeleteStrategyCommand = new DelegateCommand(o => DeleteStrategy());
-            _strategiesDirectory = Path.Combine(BrokersService.DataDirectory, "StrategyTester");
+            _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
+
+            if (!Directory.Exists(_strategiesDirectory))
+            {
+                Directory.CreateDirectory(_strategiesDirectory);
+            }
 
             LoadDefaultStrategyText();
             RefreshStrategyFilenames();

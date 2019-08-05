@@ -29,6 +29,7 @@ namespace AutomatedTrader.ViewModels
         [Import] private IBrokersCandlesService _candleService;
         [Import] private MarketsService _marketsService;
         [Import] private ITradeDetailsAutoCalculatorService _calculatorService;
+        [Import] private DataDirectoryService _dataDirectoryService;
         private bool _updatingCandles;
         private string _strategiesDirectory;
 
@@ -45,7 +46,7 @@ namespace AutomatedTrader.ViewModels
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
 
-            _strategiesDirectory = Path.Combine(BrokersService.DataDirectory, "StrategyTester");
+            _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName, "StrategyTester");
 
             var fxcm = new FxcmBroker();
             var brokers = new IBroker[]
@@ -55,7 +56,7 @@ namespace AutomatedTrader.ViewModels
 
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
-            _brokersService.LoadBrokerAccounts(_candleService, _calculatorService);
+            _brokersService.LoadBrokerAccounts(_calculatorService, _dataDirectoryService);
 
             UpdateStrategiesService();
 
