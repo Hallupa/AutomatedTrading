@@ -25,15 +25,14 @@ namespace AutomatedTraderDesigner.ViewModels
         public StrategyRunResultsViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
-            LargeChartTimeframe = Timeframe.H1;
-            UpdateCandlesOnViewTrade = false;
+            LargeChartTimeframe = Timeframe.H4;
 
             DependencyContainer.ComposeParts(this);
             Broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
 
             _uiService.ViewTradeObservable.Subscribe(o =>
             {
-                ViewTrade(SelectedTrade);
+                ViewTrade(SelectedTrade, false);
             });
 
             _uiService.ViewTradeSetupObservable.Subscribe(o =>
@@ -68,6 +67,10 @@ namespace AutomatedTraderDesigner.ViewModels
                 ResultsViewModel.UpdateResults();
                 Log.Info("Updated strategy run results");
             });
+
+            ShowClosedTrades = true;
+            ShowOpenTrades = true;
+            ShowOrders = true;
         }
 
         public TradesResultsViewModel ResultsViewModel { get; }

@@ -32,7 +32,7 @@ namespace AutomatedTrader.ViewModels
 
             _uiService.ViewTradeObservable.Subscribe(o =>
             {
-                ViewTrade(SelectedTrade);
+                ViewTrade(SelectedTrade, false);
             });
 
             _uiService.ViewTradeSetupObservable.Subscribe(o =>
@@ -77,7 +77,6 @@ namespace AutomatedTrader.ViewModels
             }
 
             ResultsViewModel.UpdateResults();
-            //SummaryViewModel.Update(Trades.ToList());
         }
     }
 }

@@ -21,9 +21,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderTools.Brokers.FXCM", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderTools.Indicators", "..\Common\Src\TraderTools.Indicators\TraderTools.Indicators.csproj", "{A5A59813-A3D3-4AF5-9923-EC5B0879BE9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderTools.Strategy", "..\Common\Src\TraderTools.Strategy\TraderTools.Strategy.csproj", "{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomatedTraderDesigner", "AutomatedTraderDesigner\AutomatedTraderDesigner.csproj", "{F996DF64-F550-4A4F-A771-88D51E7D87D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraderTools.Simulation", "..\Common\Src\TraderTools.Simulation\TraderTools.Simulation.csproj", "{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,18 +131,6 @@ Global
 		{A5A59813-A3D3-4AF5-9923-EC5B0879BE9C}.Release|x64.Build.0 = Release|x64
 		{A5A59813-A3D3-4AF5-9923-EC5B0879BE9C}.Release|x86.ActiveCfg = Release|x86
 		{A5A59813-A3D3-4AF5-9923-EC5B0879BE9C}.Release|x86.Build.0 = Release|x86
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x64.Build.0 = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x86.Build.0 = Debug|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x64.ActiveCfg = Release|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x64.Build.0 = Release|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x86.ActiveCfg = Release|Any CPU
-		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x86.Build.0 = Release|Any CPU
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Debug|x64.ActiveCfg = Debug|x64
@@ -155,6 +143,18 @@ Global
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Release|x64.Build.0 = Release|x64
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Release|x86.ActiveCfg = Release|Any CPU
 		{F996DF64-F550-4A4F-A771-88D51E7D87D7}.Release|x86.Build.0 = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x64.Build.0 = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Debug|x86.Build.0 = Debug|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x64.ActiveCfg = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x64.Build.0 = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x86.ActiveCfg = Release|Any CPU
+		{F7C5DF66-FAFB-4148-BE9F-5E830A500B31}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

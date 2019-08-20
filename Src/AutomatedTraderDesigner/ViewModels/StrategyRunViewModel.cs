@@ -9,8 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -21,7 +19,7 @@ using Newtonsoft.Json;
 using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.Trading;
-using TraderTools.Strategy;
+using TraderTools.Simulation;
 
 namespace AutomatedTraderDesigner.ViewModels
 {
@@ -55,8 +53,6 @@ namespace AutomatedTraderDesigner.ViewModels
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
             DependencyContainer.ComposeParts(this);
-
-            _tradeCalculatorService.SetOptions(CalculateOptions.ExcludePricePerPip);
 
             Markets = new ObservableCollection<string>(_marketsService.GetMarkets().Select(m => m.Name).OrderBy(x => x));
 
@@ -97,7 +93,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
         private void ClearCachedTrades()
         {
-            StrategyRunner.Cache.TradesLookup.Clear();
+            SimulationRunner.Cache.TradesLookup.Clear();
             GC.Collect();
         }
 
@@ -184,20 +180,14 @@ namespace AutomatedTraderDesigner.ViewModels
             }));
 
             var completed = 0;
-            var expectedTrades = 0;
-            var expectedTradesFound = 0;
 
             _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
             {
-                var strategyTester = new StrategyRunner(_candlesService, _tradeCalculatorService, _marketDetailsService);
+                var strategyTester = new SimulationRunner(_candlesService, _tradeCalculatorService, _marketDetailsService, 
+                    SimulationRunnerFlags.DoNotValidateStopsLimitsOrders | SimulationRunnerFlags.DoNotCacheM1Candles);
                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
                 var latest = !string.IsNullOrEmpty(EndDate) ? (DateTime?)DateTime.Parse(EndDate) : null;
-                var result = strategyTester.Run(d.Strategy, d.Market, broker,
-                    out var expegtedTradesForMarket, out var expectedTradesForMarketFound,
-                    earliest, latest, updatePrices: UpdatePrices);
-
-                Interlocked.Add(ref expectedTrades, expegtedTradesForMarket);
-                Interlocked.Add(ref expectedTradesFound, expectedTradesForMarketFound);
+                var result = strategyTester.Run(d.Strategy, d.Market, broker, earliest, latest, updatePrices: UpdatePrices);
 
                 if (result != null)
                 {
@@ -226,7 +216,6 @@ namespace AutomatedTraderDesigner.ViewModels
 
             stopwatch.Stop();
             Log.Info($"Simulation run completed in {stopwatch.Elapsed.TotalSeconds}s");
-            Log.Info($"Found {expectedTrades} - matched {expectedTradesFound}");
 
             // Save results
             if (File.Exists(_savedResultsPath))
