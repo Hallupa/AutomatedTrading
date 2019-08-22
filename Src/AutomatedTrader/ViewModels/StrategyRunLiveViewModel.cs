@@ -128,11 +128,11 @@ namespace AutomatedTrader.ViewModels
                 if (timeframeWithIndicators.Value == null) continue;
 
                 var candles = _candlesService.GetCandles(_broker, market, timeframeWithIndicators.Key, true, cacheData: false, forceUpdate: true);
-                var candlesAndIndicators = new List<BasicCandleAndIndicators>();
+                var candlesAndIndicators = new List<CandleAndIndicators>();
 
                 foreach (var candle in candles)
                 {
-                    var basicCandleWithIndicators = new BasicCandleAndIndicators(candle, maxIndex);
+                    var basicCandleWithIndicators = new CandleAndIndicators(candle, maxIndex);
 
                     var timeframeLookupIndex = TimeframeLookup<int>.GetLookupIndex(timeframeWithIndicators.Key);
 

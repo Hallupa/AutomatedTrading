@@ -107,7 +107,7 @@ namespace AutomatedTraderDesigner.ViewModels
                 foreach (var market in _marketsService.GetMarkets())
                 {
                     Log.Info($"Checking {market}");
-                    var timeframeAllCandles = new TimeframeLookup<IList<ICandle>>();
+                    var timeframeAllCandles = new TimeframeLookup<IList<Candle>>();
                     var timeframeCandleIndexes = new TimeframeLookup<int>();
 
                     foreach (var timeframe in timeframes)
