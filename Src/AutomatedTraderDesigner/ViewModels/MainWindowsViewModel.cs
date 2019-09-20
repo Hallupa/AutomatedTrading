@@ -233,7 +233,7 @@ namespace AutomatedTraderDesigner.ViewModels
         private void Start()
         {
             // Connect to brokers
-            _brokersService.Connect();
+            //_brokersService.Connect();
         }
         #endregion
 

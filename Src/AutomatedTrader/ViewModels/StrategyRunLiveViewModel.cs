@@ -26,7 +26,7 @@ namespace AutomatedTrader.ViewModels
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         [Import] private IBrokersCandlesService _candlesService;
-        [Import] private BrokersService _brokersService;
+        [Import] private IBrokersService _brokersService;
         [Import] private StrategyRunnerResultsService _results;
         [Import] private MarketsService _marketsService;
         [Import] private StrategyService _strategyService;
@@ -37,7 +37,7 @@ namespace AutomatedTrader.ViewModels
         private IDisposable _strategiesUpdatedDisposable;
         private List<IStrategy> _strategies;
         private FxcmBroker _broker;
-        private BrokerAccount _brokerAccount;
+        private IBrokerAccount _brokerAccount;
         public static string CustomCode { get; set; }
 
         #endregion
@@ -115,7 +115,7 @@ namespace AutomatedTrader.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
-        private TimeframeLookupBasicCandleAndIndicators PopulateCandles(IStrategy strategy, string market)
+        /*private TimeframeLookupBasicCandleAndIndicators PopulateCandles(IStrategy strategy, string market)
         {
             Log.Info("Updating candles");
             var maxIndex = 30;
@@ -149,7 +149,7 @@ namespace AutomatedTrader.ViewModels
             }
 
             return ret;
-        }
+        }*/
 
         private void RunStrategyLive()
         {
@@ -180,7 +180,7 @@ namespace AutomatedTrader.ViewModels
                         Log.Info($"Running for strategy: {strategy.Name} market: {market}");
 
                         // Update candles
-                        var candles = PopulateCandles(strategy, market);
+                        var candles = SimulationRunner.PopulateCandles(_broker, strategy, market, _candlesService);
 
                         // Get existing open trades for market
                         var previousTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
@@ -227,7 +227,7 @@ namespace AutomatedTrader.ViewModels
 
         private void UpdateAccount(List<(string Market, string Strategy)> newTrades = null)
         {
-            _brokerAccount.UpdateBrokerAccount(_broker, _candlesService, _marketDetailsService, _tradeCalculatorService, BrokerAccount.UpdateOption.ForceUpdate);
+            _brokerAccount.UpdateBrokerAccount(_broker, _candlesService, _marketDetailsService, _tradeCalculatorService, UpdateOption.ForceUpdate);
 
             var orderedTrades = _brokerAccount.Trades.OrderByDescending(t => t.Id).ToList();
 

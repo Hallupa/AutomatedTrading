@@ -16,7 +16,7 @@ namespace AutomatedTrader.ViewModels
     public class StrategyRunLiveResultsViewModel : TradeViewModelBase
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        [Import] public BrokersService _brokersService;
+        [Import] public IBrokersService _brokersService;
         [Import] public UIService _uiService;
         private Dispatcher _dispatcher;
         private IDisposable _testResultsUpdatedObserver;
@@ -54,7 +54,7 @@ namespace AutomatedTrader.ViewModels
                 SubItemsIndex = 1
             };
 
-            _account = _brokersService.AccountsLookup[Broker];
+            _account = (BrokerAccount)_brokersService.AccountsLookup[Broker];
             _accountUpdatedObserver = _account.AccountUpdatedObservable.Subscribe(d =>
             {
                 _dispatcher.Invoke(RefreshUI);

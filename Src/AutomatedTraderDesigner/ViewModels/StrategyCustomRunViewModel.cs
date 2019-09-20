@@ -112,6 +112,8 @@ namespace AutomatedTraderDesigner.ViewModels
                 }
             }
 
+            _strategyService.RegisterStrategy(new TrendStrategy(), false);
+
             _strategyService.SetStrategiesToUseRiskSizing(false);
             _strategyService.NotifyStrategiesChanged();
         }
