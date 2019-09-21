@@ -37,7 +37,7 @@ namespace AutomatedTraderDesigner.ViewModels
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [Import] private BrokersService _brokersService;
+        [Import] private IBrokersService _brokersService;
         [Import] private TickDataService _tickDataService;
         [Import] private StrategyService _strategyService;
         [Import] private IBrokersCandlesService _candleService;
@@ -233,6 +233,8 @@ namespace AutomatedTraderDesigner.ViewModels
         private void Start()
         {
             // Connect to brokers
+            //var fxcm = (FxcmBroker)_brokersService.Brokers.First(x => x.Name == "FXCM");
+            //fxcm.SetUsernamePassword("", "");
             //_brokersService.Connect();
         }
         #endregion

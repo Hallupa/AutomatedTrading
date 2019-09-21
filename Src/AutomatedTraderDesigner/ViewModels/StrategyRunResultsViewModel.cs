@@ -8,7 +8,6 @@ using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
-using TraderTools.Core.Services;
 using TraderTools.Core.UI.ViewModels;
 
 namespace AutomatedTraderDesigner.ViewModels
@@ -17,7 +16,7 @@ namespace AutomatedTraderDesigner.ViewModels
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         [Import] private StrategyRunnerResultsService _results;
-        [Import] public BrokersService _brokersService;
+        [Import] public IBrokersService _brokersService;
         [Import] public UIService _uiService;
         private Dispatcher _dispatcher;
         private IDisposable _testResultsUpdatedObserver;
@@ -77,7 +76,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
         private void UpdateTrades()
         {
-            var allTrades = _results.Results.OrderByDescending(x => x.OrderDateTime.Value).ToList();
+            var allTrades = _results.Results.OrderByDescending(x => x.OrderDateTime ?? x.EntryDateTime).ToList();
 
             _dispatcher.Invoke(() =>
             {

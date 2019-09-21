@@ -11,6 +11,7 @@ using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using Hallupa.Library.UI.Views;
 using log4net;
+using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.ViewModels;
 
@@ -24,7 +25,7 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private StrategyRunnerResultsService _results;
         [Import] private StrategyService _strategyService;
         [Import] private UIService _uiService;
-        [Import] private DataDirectoryService _dataDirectoryService;
+        [Import] private IDataDirectoryService _dataDirectoryService;
 
         private IDisposable _testResultsUpdatedObserver;
         private string _selectedStrategyFilename;
@@ -121,7 +122,7 @@ namespace AutomatedTraderDesigner.ViewModels
         private void LoadDefaultStrategyText()
         {
             var binPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            _defaultStrategyText = File.ReadAllText(Path.Combine(binPath, "DefaultStrategy.txt"));
+            _defaultStrategyText = File.ReadAllText(Path.Combine(binPath, "DefaultStrategy.cs"));
         }
 
         private void RefreshStrategyFilenames()

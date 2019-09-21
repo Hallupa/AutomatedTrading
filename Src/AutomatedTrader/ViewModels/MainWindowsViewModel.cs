@@ -23,13 +23,13 @@ namespace AutomatedTrader.ViewModels
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [Import] private BrokersService _brokersService;
+        [Import] private IBrokersService _brokersService;
         [Import] private TickDataService _tickDataService;
         [Import] private StrategyService _strategyService;
         [Import] private IBrokersCandlesService _candleService;
         [Import] private MarketsService _marketsService;
         [Import] private ITradeDetailsAutoCalculatorService _calculatorService;
-        [Import] private DataDirectoryService _dataDirectoryService;
+        [Import] private IDataDirectoryService _dataDirectoryService;
         private bool _updatingCandles;
         private string _strategiesDirectory;
 
@@ -46,7 +46,7 @@ namespace AutomatedTrader.ViewModels
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
             UpdateTickDataCommand = new DelegateCommand(o => UpdateTickData());
 
-            _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName, "StrategyTester");
+            _strategiesDirectory = _dataDirectoryService.MainDirectoryWithApplicationName;
 
             var fxcm = new FxcmBroker();
             var brokers = new IBroker[]

@@ -132,9 +132,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="x.cs" />
-    <Content Include="DefaultStrategy.txt">
+    <Compile Include="DefaultStrategy.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </Compile>
     <Compile Include="Services\StrategyRunnerResultsService.cs" />
     <Compile Include="Services\UIService.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />

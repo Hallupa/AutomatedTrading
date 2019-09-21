@@ -7,6 +7,7 @@ using Abt.Controls.SciChart.Visuals;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using log4net;
+using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
 
@@ -18,7 +19,7 @@ namespace AutomatedTrader
     public partial class App : Application
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        [Import] private DataDirectoryService _dataDirectoryService;
+        [Import] private IDataDirectoryService _dataDirectoryService;
 
         protected override void OnStartup(StartupEventArgs e)
         {

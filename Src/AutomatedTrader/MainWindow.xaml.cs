@@ -1,10 +1,13 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Reactive.Disposables;
 using System.Reflection;
 using System.Windows;
 using AutomatedTrader.ViewModels;
 using Hallupa.Library;
 using log4net;
+using TraderTools.Basics;
 using TraderTools.Core.Services;
 
 namespace AutomatedTrader
@@ -17,7 +20,7 @@ namespace AutomatedTrader
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         [Import]
-        private BrokersService _brokersService;
+        private IBrokersService _brokersService;
 
         public MainWindow()
         {
@@ -31,7 +34,7 @@ namespace AutomatedTrader
 
         private void OnClosing(object sender, CancelEventArgs cancelEventArgs)
         {
-            _brokersService.Dispose();
+            ((IDisposable)_brokersService).Dispose();
         }
     }
 }

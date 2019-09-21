@@ -28,14 +28,14 @@ namespace AutomatedTraderDesigner.ViewModels
         #region Fields
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         [Import] private IBrokersCandlesService _candlesService;
-        [Import] private BrokersService _brokersService;
+        [Import] private IBrokersService _brokersService;
         [Import] private StrategyRunnerResultsService _results;
         [Import] private MarketsService _marketsService;
         [Import] private StrategyService _strategyService;
         [Import] private IMarketDetailsService _marketDetailsService;
         [Import] private ITradeDetailsAutoCalculatorService _tradeCalculatorService;
         [Import] private UIService _uiService;
-        [Import] private DataDirectoryService _dataDirectoryService;
+        [Import] private IDataDirectoryService _dataDirectoryService;
 
         private bool _runStrategyEnabled = true;
         private Dispatcher _dispatcher;
