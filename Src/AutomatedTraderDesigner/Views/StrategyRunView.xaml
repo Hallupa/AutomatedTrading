@@ -17,7 +17,6 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button Content="Cleared cached trades" Margin="2" Padding="10,2,10,2" Command="{Binding ClearCachedTradesCommand}"/>
             <CheckBox Content="Update prices" Margin="2" Padding="10,2,10,2" IsChecked="{Binding UpdatePrices}"/>
         </StackPanel>
 

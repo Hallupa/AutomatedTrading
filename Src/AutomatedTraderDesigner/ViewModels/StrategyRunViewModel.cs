@@ -66,7 +66,6 @@ namespace AutomatedTraderDesigner.ViewModels
             }
 
             RunStrategyCommand = new DelegateCommand(RunStrategyClicked);
-            ClearCachedTradesCommand = new DelegateCommand(o => ClearCachedTrades());
             StrategiesUpdated(null);
             _strategiesUpdatedDisposable = StrategyService.UpdatedObservable.Subscribe(StrategiesUpdated);
             _uiService.RegisterF5Action(() => RunStrategyClicked(null));
@@ -89,12 +88,6 @@ namespace AutomatedTraderDesigner.ViewModels
             }
 
             OnPropertyChanged("SelectedStrategies");
-        }
-
-        private void ClearCachedTrades()
-        {
-            SimulationRunner.Cache.TradesLookup.Clear();
-            GC.Collect();
         }
 
         public List<IStrategy> Strategies
@@ -121,7 +114,6 @@ namespace AutomatedTraderDesigner.ViewModels
         public List<object> SelectedMarkets { get; set; } = new List<object>();
         public string StartDate { get; set; }
         public string EndDate { get; set; }
-        public DelegateCommand ClearCachedTradesCommand { get; private set; }
         public bool UpdatePrices { get; set; }
 
 
