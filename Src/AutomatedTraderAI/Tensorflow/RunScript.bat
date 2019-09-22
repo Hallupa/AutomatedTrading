@@ -1,0 +1,10 @@
+ECHO OFF
+CLS
+ECHO %0
+ECHO %1
+ECHO %2
+ECHO %3
+
+ECHO Running
+PYTHON %1 %2 %3
+PAUSE

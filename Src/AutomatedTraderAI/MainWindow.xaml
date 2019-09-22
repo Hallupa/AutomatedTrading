@@ -1,0 +1,68 @@
+﻿<Window x:Class="TraderTools.AutomatedTraderAI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TraderTools.AutomatedTraderAI"
+        xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
+        xmlns:ui="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
+        xmlns:views="clr-namespace:TraderTools.AutomatedTraderAI.Views"
+        xmlns:viewModels="clr-namespace:TraderTools.AutomatedTraderAI.ViewModels"
+        xmlns:ui1="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
+        mc:Ignorable="d"
+        Title="Automated trader AI" Height="800" Width="1100" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.Resources>
+            <converters:ObjectToVisibilityConverter x:Key="ObjToVis"/>
+            <converters:ObjectToBoolConverter x:Key="ObjToBool"/>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Ribbon x:Name="RibbonWin" Grid.Row="0" SelectedIndex="0">
+            <Ribbon.Resources>
+                <Style TargetType="RibbonTabHeaderItemsControl">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </Style>
+            </Ribbon.Resources>
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu Visibility="Collapsed">
+                </RibbonApplicationMenu>
+            </Ribbon.ApplicationMenu>
+
+            <RibbonTab>
+                <RibbonGroup Header="Pages">
+                    <RibbonToggleButton Label="Training" IsChecked="{Binding Page, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels:PageToShow.Training}, Mode=TwoWay}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="Chart" Visibility="{Binding Page, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels:PageToShow.Training}, Mode=OneWay}">
+                    <RibbonToggleButton Label="Zoom" IsChecked="{Binding ChartingService.ChartMode, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static ui:ChartMode.Zoom}, Mode=TwoWay}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="Training/testing" Visibility="{Binding Page, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels:PageToShow.Training}, Mode=OneWay}">
+                    <ComboBox ItemsSource="{Binding Markets}" SelectedItem="{Binding SelectedMarket}" DisplayMemberPath="Name" DataContext="{Binding DataContext, ElementName=TrainingView}" MinWidth="110"/>
+                    <RibbonButton Label="Add model" Command="{Binding AddModelCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Delete model" Command="{Binding DeleteModelCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Test model" Command="{Binding TestModelCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                </RibbonGroup>
+
+                <RibbonGroup Header="Model" Visibility="{Binding Page, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels:PageToShow.Training}, Mode=OneWay}">
+                    <RibbonButton Label="Add model data point" Command="{Binding AddModelDataCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Delete model data point" Command="{Binding DeleteModelDataCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Train" Command="{Binding TrainCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Generate data" Command="{Binding GenerateDataCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                    <RibbonButton Label="Change input count" Command="{Binding ChangeInputCountCommand}" DataContext="{Binding DataContext, ElementName=TrainingView}"/>
+                </RibbonGroup>
+            </RibbonTab>
+        </Ribbon>
+
+        <Grid Grid.Row="1" Visibility="{Binding Page, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels:PageToShow.Training}, Mode=OneWay}">
+            <views:TrainingView x:Name="TrainingView"/>
+        </Grid>
+
+        <ui1:LogControl Grid.Row="2" x:Name="Logger"/>
+    </Grid>
+</Window>
