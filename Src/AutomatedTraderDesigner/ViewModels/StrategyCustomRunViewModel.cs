@@ -12,8 +12,8 @@ using Hallupa.Library;
 using Hallupa.Library.UI.Views;
 using log4net;
 using TraderTools.Basics;
-using TraderTools.Core.Services;
 using TraderTools.Core.UI.ViewModels;
+using TraderTools.Strategy;
 
 namespace AutomatedTraderDesigner.ViewModels
 {

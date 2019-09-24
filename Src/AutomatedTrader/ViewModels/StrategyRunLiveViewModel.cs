@@ -18,6 +18,7 @@ using TraderTools.Core.Broker;
 using TraderTools.Core.Services;
 using TraderTools.Core.Trading;
 using TraderTools.Simulation;
+using TraderTools.Strategy;
 
 namespace AutomatedTrader.ViewModels
 {

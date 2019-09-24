@@ -15,6 +15,7 @@ using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
+using TraderTools.Strategy;
 
 namespace AutomatedTrader.ViewModels
 {

@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using Keras.Models;
+using Numpy;
+using Numpy.Models;
+using TraderTools.AI;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
-using TraderTools.Core.Extensions;
 using TraderTools.Core.Trading;
 using TraderTools.Simulation;
 
@@ -15,16 +16,22 @@ namespace AutomatedTraderDesigner
     [RequiredTimeframeCandles(Timeframe.H4, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.ATR)]
     public class NewStrategy : StrategyBase
     {
+        private DataGenerator _dataGenerator;
         public override string Name => "Name";
+
+        public NewStrategy()
+        {
+            _dataGenerator = new DataGenerator();
+        }
 
         public override List<Trade> CreateNewTrades(
             MarketDetails market, TimeframeLookup<List<CandleAndIndicators>> candlesLookup,
             List<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService)
         {
-            var andIndicators = candlesLookup[Timeframe.H4];
-            if (andIndicators.Count < 20) return null;
+            var candleAndIndicators = candlesLookup[Timeframe.H4];
+            if (candleAndIndicators.Count < 20) return null;
 
-            var c = andIndicators[andIndicators.Count - 1];
+            var c = candleAndIndicators[candleAndIndicators.Count - 1];
             var entryPrice = c[Indicator.EMA8].Value + c[Indicator.ATR].Value;
             var stop = entryPrice - c[Indicator.ATR].Value;
             var limit = entryPrice + c[Indicator.ATR].Value;
@@ -32,10 +39,25 @@ namespace AutomatedTraderDesigner
             var risk = 0.0005M;
 
             var trade1 = CreateOrder(market.Name, expiry,
-                (decimal)entryPrice, TradeDirection.Long, (decimal)andIndicators[andIndicators.Count - 1].Candle.CloseBid,
-                andIndicators[andIndicators.Count - 1].Candle.CloseTime(), (decimal?)limit, (decimal)stop, risk);
+                (decimal)entryPrice, TradeDirection.Long, (decimal)candleAndIndicators[candleAndIndicators.Count - 1].Candle.CloseBid,
+                candleAndIndicators[candleAndIndicators.Count - 1].Candle.CloseTime(), (decimal?)limit, (decimal)stop, risk);
 
             var trade2 = CreateMarketOrder(market.Name, TradeDirection.Long, c.Candle, (decimal)stop, risk, (decimal)limit);
+
+            var path = @"model.h5";
+            var model = BaseModel.LoadModel(path);
+            var inputsCount = 8;
+            _dataGenerator.CreateData(candlesLookup[Timeframe.D1], candlesLookup[Timeframe.D1].Count - 1,
+                ModelDataType.EMAsOnly, inputsCount, out _, out _, out _, out var rawData);
+            var x = np.array(np.array(rawData)).reshape(new Shape(1, DataGenerator.GetDataPointsCount(ModelDataType.EMAsOnly) * inputsCount));
+            var y = model.Predict(x)[0];
+
+            // Get which index is highest
+            var maxIndex = 0;
+            for (var i = 1; i < y.size; i++)
+            {
+                if ((float)y[i] > (float)y[maxIndex]) maxIndex = i;
+            }
 
 
             return new List<Trade> { trade1, trade2 };

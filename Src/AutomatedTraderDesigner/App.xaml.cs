@@ -7,6 +7,7 @@ using log4net;
 using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
+using TraderTools.Strategy;
 
 namespace AutomatedTraderDesigner
 {
@@ -26,6 +27,7 @@ namespace AutomatedTraderDesigner
             DependencyContainer.AddAssembly(typeof(App).Assembly);
             DependencyContainer.AddAssembly(typeof(BrokersService).Assembly);
             DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
+            DependencyContainer.AddAssembly(typeof(StrategyService).Assembly);
 
             DependencyContainer.ComposeParts(this);
 

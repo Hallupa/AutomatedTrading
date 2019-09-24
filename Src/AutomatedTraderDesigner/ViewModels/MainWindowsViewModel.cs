@@ -11,11 +11,13 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
+using Keras.Models;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
+using TraderTools.Strategy;
 
 namespace AutomatedTraderDesigner.ViewModels
 {
@@ -53,6 +55,7 @@ namespace AutomatedTraderDesigner.ViewModels
         public MainWindowsViewModel()
         {
             DependencyContainer.ComposeParts(this);
+
 
             CheckFXCandlesCommand = new DelegateCommand(CheckFXCandles);
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
@@ -234,7 +237,7 @@ namespace AutomatedTraderDesigner.ViewModels
         {
             // Connect to brokers
             //var fxcm = (FxcmBroker)_brokersService.Brokers.First(x => x.Name == "FXCM");
-            //fxcm.SetUsernamePassword("", "");
+            //fxcm.SetUsernamePassword("", "!");
             //_brokersService.Connect();
         }
         #endregion
