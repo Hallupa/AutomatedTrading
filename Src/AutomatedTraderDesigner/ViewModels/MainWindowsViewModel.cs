@@ -8,16 +8,18 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using AutomatedTraderDesigner.Services;
 using Hallupa.Library;
 using Keras.Models;
 using log4net;
+using Numpy;
+using Python.Runtime;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
 using TraderTools.Strategy;
+using Dispatcher = System.Windows.Threading.Dispatcher;
 
 namespace AutomatedTraderDesigner.ViewModels
 {
@@ -46,6 +48,7 @@ namespace AutomatedTraderDesigner.ViewModels
         [Import] private MarketsService _marketsService;
         [Import] private UIService _uiService;
         private bool _updatingCandles;
+        private Py.GILState _x;
 
         [Import] public UIService UIService { get; private set; }
 
@@ -55,7 +58,6 @@ namespace AutomatedTraderDesigner.ViewModels
         public MainWindowsViewModel()
         {
             DependencyContainer.ComposeParts(this);
-
 
             CheckFXCandlesCommand = new DelegateCommand(CheckFXCandles);
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
@@ -74,6 +76,16 @@ namespace AutomatedTraderDesigner.ViewModels
             Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
 
             EventManager.RegisterClassHandler(typeof(Window), Keyboard.KeyDownEvent, new KeyEventHandler(UIElement_OnPreviewKeyDown), true);
+
+            _x = Py.GIL();
+            //using (Py.GIL())
+            {
+            }
+
+            //using (Py.GIL())
+            {
+                PythonEngine.BeginAllowThreads();
+            }
         }
 
         private void UIElement_OnPreviewKeyDown(object sender, KeyEventArgs e)

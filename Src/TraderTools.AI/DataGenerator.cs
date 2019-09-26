@@ -78,12 +78,18 @@ namespace TraderTools.AI
         }
 
         public void CreateData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles,
-            out int imgWidth, out int imgHeight, out byte[,] imgArray, out float[] rawData)
+            out int imgWidth, out int imgHeight, out byte[,] imgArray)
         {
             var candlesWithIndicators = GetCandlesWithIndicators(market, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 }, dateTime);
 
-            CreateData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles,
-                out imgWidth, out imgHeight, out imgArray, out rawData);
+            CreateData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles, out imgWidth, out imgHeight, out imgArray);
+        }
+
+        public void CreateRawData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles, out float[] rawData)
+        {
+            var candlesWithIndicators = GetCandlesWithIndicators(market, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 }, dateTime);
+
+            CreateRawData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles, out rawData);
         }
 
         public static int GetDataPointsCount(ModelDataType modelDataType)
@@ -97,14 +103,66 @@ namespace TraderTools.AI
             throw new ApplicationException();
         }
 
+        public void CreateRawData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, ModelDataType modelDataType, int numberOfCandles, out float[] rawData)
+        {
+            var rawDataList = new List<float>();
+
+            var prevC = candlesWithIndicators[uptoIndex - numberOfCandles];
+            var yMax = float.MinValue;
+            var yLow = float.MaxValue;
+
+            var first = true;
+            for (var i = uptoIndex - numberOfCandles + 1; i <= uptoIndex; i++)
+            {
+                if (first || candlesWithIndicators[i][Indicator.EMA8].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA8].Value;
+                if (first || candlesWithIndicators[i][Indicator.EMA25].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA25].Value;
+                if (first || candlesWithIndicators[i][Indicator.EMA50].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA50].Value;
+
+                if (first || candlesWithIndicators[i][Indicator.EMA8].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA8].Value;
+                if (first || candlesWithIndicators[i][Indicator.EMA25].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA25].Value;
+                if (first || candlesWithIndicators[i][Indicator.EMA50].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA50].Value;
+
+                if (modelDataType == ModelDataType.EMAsAndCandles)
+                {
+                    if (first || candlesWithIndicators[i].Candle.HighBid > yMax) yMax = candlesWithIndicators[i].Candle.HighBid;
+                    if (first || candlesWithIndicators[i].Candle.LowBid < yLow) yLow = candlesWithIndicators[i].Candle.LowBid;
+                }
+
+                first = false;
+            }
+
+            yMax *= 1.005F;
+            yLow *= 0.995F;
+
+            Func<float, float> convertToRaw = y => (y - yLow) / (yMax - yLow);
+
+            for (var i = 0; i < numberOfCandles; i++)
+            {
+                var c = candlesWithIndicators[uptoIndex - numberOfCandles + i + 1];
+
+                if (modelDataType == ModelDataType.EMAsAndCandles)
+                {
+                    rawDataList.Add(convertToRaw(c.Candle.HighBid));
+                    rawDataList.Add(convertToRaw(c.Candle.LowBid));
+                    rawDataList.Add(convertToRaw(c.Candle.OpenBid));
+                    rawDataList.Add(convertToRaw(c.Candle.CloseBid));
+                }
+
+                rawDataList.Add(convertToRaw(c[Indicator.EMA8].Value));
+                rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
+                rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
+            }
+
+            rawData = rawDataList.ToArray();
+        }
+
         public void CreateData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, ModelDataType modelDataType, int numberOfCandles,
-            out int imgWidth, out int imgHeight, out byte[,] imgArray, out float[] rawData)
+            out int imgWidth, out int imgHeight, out byte[,] imgArray)
         { 
             imgWidth = numberOfCandles * 3;
             imgHeight = modelDataType == ModelDataType.EMAsAndCandles ? 100 : 60;
             byte closeUpColor = 1;
             byte closeDownColor = 2;
-            var rawDataList = new List<float>();
 
             var prevC = candlesWithIndicators[uptoIndex - numberOfCandles];
             var yMax = float.MinValue;
@@ -135,7 +193,6 @@ namespace TraderTools.AI
 
             var factor = (float)(imgHeight - 1) / (float)(yMax - yLow);
             Func<float, int> convertY = y => (int)((y - yLow) * factor);
-            Func<float, float> convertToRaw = y => (y - yLow) / (yMax - yLow);
             imgArray = new byte[imgHeight, numberOfCandles * 3];
 
             for (var i = 0; i < numberOfCandles; i++)
@@ -152,25 +209,14 @@ namespace TraderTools.AI
                 {
                     Rect(imgArray, imgWidth, imgHeight, c.Candle.CloseBid > c.Candle.OpenBid ? closeUpColor : closeDownColor, candleMidX - 1, yClose, candleMidX + 1, yOpen);
                     Rect(imgArray, imgWidth, imgHeight, c.Candle.CloseBid > c.Candle.OpenBid ? closeUpColor : closeDownColor, candleMidX, y1High, candleMidX, y2Low);
-
-                    rawDataList.Add(convertToRaw(c.Candle.HighBid));
-                    rawDataList.Add(convertToRaw(c.Candle.LowBid));
-                    rawDataList.Add(convertToRaw(c.Candle.OpenBid));
-                    rawDataList.Add(convertToRaw(c.Candle.CloseBid));
                 }
 
                 Line(imgArray, imgWidth, imgHeight, 3, candleMidX - 3, convertY(prevC[Indicator.EMA50].Value), candleMidX, convertY(c[Indicator.EMA50].Value));
                 Line(imgArray, imgWidth, imgHeight, 4, candleMidX - 3, convertY(prevC[Indicator.EMA25].Value), candleMidX, convertY(c[Indicator.EMA25].Value));
                 Line(imgArray, imgWidth, imgHeight, 5, candleMidX - 3, convertY(prevC[Indicator.EMA8].Value), candleMidX, convertY(c[Indicator.EMA8].Value));
 
-                rawDataList.Add(convertToRaw(c[Indicator.EMA8].Value));
-                rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
-                rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
-
                 prevC = c;
             }
-
-            rawData = rawDataList.ToArray();
         }
 
         public void CreateData(Model model)
@@ -182,7 +228,8 @@ namespace TraderTools.AI
                 var dp = model.DataPoints[dpIndex];
                 dpNum++;
 
-                CreateData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var imgWidth, out var imgHeight, out var imgArray, out var rawData);
+                CreateData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var imgWidth, out var imgHeight, out var imgArray);
+                CreateRawData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var rawData);
 
                 var path = Path.Combine(GetModelDirectory(model, _dataDirectoryService), $"{dp.Label}_{dpNum}.png");
                 SaveImage(path, imgArray, imgWidth, imgHeight);

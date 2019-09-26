@@ -47,8 +47,7 @@ namespace AutomatedTraderDesigner
             var path = @"model.h5";
             var model = BaseModel.LoadModel(path);
             var inputsCount = 8;
-            _dataGenerator.CreateData(candlesLookup[Timeframe.D1], candlesLookup[Timeframe.D1].Count - 1,
-                ModelDataType.EMAsOnly, inputsCount, out _, out _, out _, out var rawData);
+            _dataGenerator.CreateRawData(candlesLookup[Timeframe.D1], candlesLookup[Timeframe.D1].Count - 1, ModelDataType.EMAsOnly, inputsCount, out var rawData);
             var x = np.array(np.array(rawData)).reshape(new Shape(1, DataGenerator.GetDataPointsCount(ModelDataType.EMAsOnly) * inputsCount));
             var y = model.Predict(x)[0];
 

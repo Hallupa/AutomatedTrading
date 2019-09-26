@@ -1,276 +1,125 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Keras.Models;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
 using TraderTools.Core.Extensions;
 using TraderTools.Core.Trading;
 using TraderTools.Simulation;
+using TraderTools.AI;
+//using Keras.Models;
+//using Numpy;
+//using Numpy.Models;
+using Numpy;
+using Numpy.Models;
+using Python.Runtime;
 
 namespace AutomatedTraderDesigner
 {
-    [StopTrailIndicator(Timeframe.D1, Indicator.EMA8)]
-    [RequiredTimeframeCandles(Timeframe.H2, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.ATR)]
     [RequiredTimeframeCandles(Timeframe.D1, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.ATR)]
-    [RequiredTimeframeCandles(Timeframe.H4, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.ATR)]
-    public class TrendStrategy : StrategyBase
+    public class NewStrategy2 : StrategyBase
     {
-        private const double StopAtrRatio = 5.5, EntryOffsetAtrRatio = -1, MinEMATrendATRRatio = 0.35, MinTriggerCandleMinAtrRatio = 1.5, MaxTriggerCandleMinAtrRatio = 5, SpreadMaxRatioOfATR = 0.2;
-        private const int MinTrendingCandles = 3, OrderExpiryCandles = 5, FanningCandles = 4;
-        private decimal? LimitRMultiple = null;//3M;
+        private DataGenerator _dataGenerator;
+        public override string Name => "12345";
+        private Random _rnd = new Random();
+        private BaseModel _model;
+        private int _inputsCount;
+        private Py.GILState _y;
 
-        public override string Name => "TestC - trend with EMAs compressing";
+        public NewStrategy2()
+        {
+            _dataGenerator = new DataGenerator();
+            _inputsCount = 8;
+        }
 
         public override List<Trade> CreateNewTrades(
             MarketDetails market, TimeframeLookup<List<CandleAndIndicators>> candlesLookup,
             List<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService)
         {
-            List<CandleAndIndicators> candles = candlesLookup[Timeframe.H4], d1Candles = candlesLookup[Timeframe.D1];
-            if (candles.Count < 20 || d1Candles.Count < 20) return null;
-            var candle = candles[candles.Count - 1];
-            if (!candle[Indicator.EMA8].IsFormed || !candle[Indicator.EMA25].IsFormed || !candle[Indicator.EMA50].IsFormed || candle.Candle.IsComplete != 1) return null;
 
-            var trend = GetEMAsTrendAndFanning(candles);
-            if (trend == Trend.None) return null;
-
-            if (trend != GetEMAsTrendAndFanning(d1Candles)) return null;
-
-            /*var spread = Math.Abs(candle.Candle.CloseBid - candle.Candle.CloseAsk);
-            var atr = candle[Indicator.ATR].Value;
-            if (spread > atr * SpreadMaxRatioOfATR) return null;
-
-            var trend = GetTrend(candles, 0);
-            if (trend == Trend.None) return null;
-
-            var d1Trend = GetTrend(d1Candles, 0);
-            if (d1Trend != trend) return null;
-
-            for (var i = 0; i < 5; i++)
+            if (_y == null)
             {
-                // Check EMAs are lined up
-                if (!IsEMAsLinedUp(d1Candles, d1Trend, i)) return null;
-                if (!IsEMAsLinedUp(candles, d1Trend, i)) return null;
+                _y = Py.GIL();
+                var path = @"C:\Users\Oliver Wickenden\Documents\TraderTools\AutomatedTraderAI\Models\Trend2\model.h5";
+                _model = BaseModel.LoadModel(path);
+            }
+
+            var candles = candlesLookup[Timeframe.D1];
+            if (candles.Count < 20) return null;
+
+            var c = candles[candles.Count - 1];
+            var atr = c[Indicator.ATR].Value;
+
+            var rndNumber = _rnd.Next(1, 100);
+
+            if ((rndNumber >= 20 && rndNumber <= 30) || (rndNumber >= 70 && rndNumber <= 80))
+            {
+                _dataGenerator.CreateRawData(candlesLookup[Timeframe.D1], candlesLookup[Timeframe.D1].Count - 1, ModelDataType.EMAsOnly, _inputsCount, out var rawData);
+
+                //using (Py.GIL())
+                {
+                    //var x1 = np.array(np.array(rawData));
+                    //var x = x1.reshape(new Shape(1, DataGenerator.GetDataPointsCount(ModelDataType.EMAsOnly) * _inputsCount));
+                    //var y = _model.Predict(x)[0];
+
+                    var x = np.array(np.array(rawData)).reshape(new Shape(1, DataGenerator.GetDataPointsCount(ModelDataType.EMAsOnly) * _inputsCount));
+
+                    var y = _model.Predict(x)[0];
+
+                    // Get which index is highest
+                    var maxIndex = 0;
+                    for (var i = 1; i < y.size; i++)
+                    {
+                        if ((float)y[i] > (float)y[maxIndex]) maxIndex = i;
+                    }
+    
+                    if (maxIndex == 3)
+                    {
+                        var entryPrice = c[Indicator.EMA8].Value; //c.Candle.CloseAsk;
+                        var stop = entryPrice - atr;
+                        var limit = entryPrice + atr;
+                        // var t = CreateMarketOrder(market.Name, TradeDirection.Long, c.Candle, (decimal)stop, 0.005M, (decimal)limit);
+                        var t = CreateOrder(market.Name, c.Candle.CloseTime().AddSeconds((int)Timeframe.H4 * 2),
+                            (decimal)entryPrice, TradeDirection.Long, (decimal)c.Candle.CloseAsk,
+                            c.Candle.CloseTime(), (decimal?)limit, (decimal)stop, 0.005M);
+
+
+                        return new List<Trade> { t };
+                    }
+    
+                    if (maxIndex == 1)
+                    {
+                       /* var entryPrice = c.Candle.CloseBid;
+                        var stop = entryPrice + atr;
+                        var limit = entryPrice - atr;
+                        var t = CreateMarketOrder(market.Name, TradeDirection.Short, c.Candle, (decimal)stop, 0.005M, (decimal)limit);
+                        return new List<Trade> { t };*/
+                    }
+                }
+            }
+
+            /*if (rndNumber >= 20 && rndNumber <= 30)
+            {
+            	var entryPrice = c.Candle.CloseAsk;
+            	var stop = entryPrice - atr;
+            	var limit = entryPrice + atr;
+        		var t = CreateMarketOrder(market.Name, TradeDirection.Long, c.Candle, (decimal)stop, 0.005M, (decimal)limit);
+        		t.Custom1 = _rnd.Next(1, 10000000);
+            	return new List<Trade> { t };
+            }
+            
+            if (rndNumber >= 70 && rndNumber <= 80)
+            {
+            	var entryPrice = c.Candle.CloseBid;
+            	var stop = entryPrice + atr;
+            	var limit = entryPrice - atr;
+        		var t = CreateMarketOrder(market.Name, TradeDirection.Short, c.Candle, (decimal)stop, 0.005M, (decimal)limit);
+        		t.Custom1 = _rnd.Next(1, 10000000);
+            	return new List<Trade> { t };
             }*/
 
-
-            //if (!IsBigCandleInTrendDirection(candles, trend, 0)) return null;
-
-            return CreateTrade(market, trend, candle, candles);
-        }
-
-        private static Trend GetEMAsTrendAndCompressing(List<CandleAndIndicators> candles)
-        {
-            var trend = Trend.None;
-            float? dist = null;
-            var minCompressingATRRatio = 0.15;
-            var maxFirstCandleATRRatio = 0.2;
-            for (var i = FanningCandles - 1; i >= 0; i--)
-            {
-                if (!(candles[candles.Count - 1 - i][Indicator.EMA50].Value >
-                      candles[candles.Count - 1 - i][Indicator.EMA25].Value
-                      && candles[candles.Count - 1 - i][Indicator.EMA25].Value >
-                      candles[candles.Count - 1 - i][Indicator.EMA8].Value)) break;
-
-                var newDist = Math.Abs(candles[candles.Count - 1 - i][Indicator.EMA50].Value -
-                                       candles[candles.Count - 1 - i][Indicator.EMA8].Value);
-                var atr = candles[candles.Count - 1 - i][Indicator.ATR].Value;
-                if (i == 0 && newDist > atr * maxFirstCandleATRRatio) break;
-
-                if (dist != null && newDist > dist - atr * minCompressingATRRatio) break;
-                dist = newDist;
-
-                if (i == 0)
-                {
-                    trend = Trend.Down;
-                }
-            }
-
-            if (trend != Trend.Down)
-            {
-                for (var i = FanningCandles - 1; i >= 0; i--)
-                {
-                    if (!(candles[candles.Count - 1 - i][Indicator.EMA50].Value <
-                          candles[candles.Count - 1 - i][Indicator.EMA25].Value
-                          && candles[candles.Count - 1 - i][Indicator.EMA25].Value <
-                          candles[candles.Count - 1 - i][Indicator.EMA8].Value)) break;
-
-                    var newDist = Math.Abs(candles[candles.Count - 1 - i][Indicator.EMA50].Value -
-                                           candles[candles.Count - 1 - i][Indicator.EMA8].Value);
-                    var atr = candles[candles.Count - 1 - i][Indicator.ATR].Value;
-                    if (i == 0 && newDist > atr * maxFirstCandleATRRatio) break;
-
-                    if (dist != null && newDist > dist - atr * minCompressingATRRatio) break;
-                    dist = newDist;
-
-                    if (i == 0)
-                    {
-                        trend = Trend.Up;
-                    }
-                }
-            }
-
-            return trend;
-        }
-
-        private static Trend GetEMAsTrendAndFanning(List<CandleAndIndicators> candles)
-        {
-            var trend = Trend.None;
-            float? dist = null;
-            var minFanningATRRatio = 0.15;
-            for (var i = FanningCandles - 1; i >= 0; i--)
-            {
-                if (!(candles[candles.Count - 1 - i][Indicator.EMA50].Value >
-                      candles[candles.Count - 1 - i][Indicator.EMA25].Value
-                      && candles[candles.Count - 1 - i][Indicator.EMA25].Value >
-                      candles[candles.Count - 1 - i][Indicator.EMA8].Value)) break;
-
-                var newDist = Math.Abs(candles[candles.Count - 1 - i][Indicator.EMA50].Value -
-                                       candles[candles.Count - 1 - i][Indicator.EMA8].Value);
-                var atr = candles[candles.Count - 1 - i][Indicator.ATR].Value;
-                if (newDist < atr * 0.1) break;
-
-                if (dist != null && newDist < dist + atr * minFanningATRRatio) break;
-                dist = newDist;
-
-                if (i == 0)
-                {
-                    trend = Trend.Down;
-                }
-            }
-
-            if (trend != Trend.Down)
-            {
-                for (var i = FanningCandles - 1; i >= 0; i--)
-                {
-                    if (!(candles[candles.Count - 1 - i][Indicator.EMA50].Value <
-                          candles[candles.Count - 1 - i][Indicator.EMA25].Value
-                          && candles[candles.Count - 1 - i][Indicator.EMA25].Value <
-                          candles[candles.Count - 1 - i][Indicator.EMA8].Value)) break;
-
-                    var newDist = Math.Abs(candles[candles.Count - 1 - i][Indicator.EMA50].Value -
-                                           candles[candles.Count - 1 - i][Indicator.EMA8].Value);
-                    var atr = candles[candles.Count - 1 - i][Indicator.ATR].Value;
-                    if (newDist < atr * 0.1) break;
-
-                    if (dist != null && newDist < dist + atr * minFanningATRRatio) break;
-                    dist = newDist;
-
-                    if (i == 0)
-                    {
-                        trend = Trend.Up;
-                    }
-                }
-            }
-
-            return trend;
-        }
-
-        private List<Trade> CreateTrade(MarketDetails market, Trend trend, CandleAndIndicators candle, List<CandleAndIndicators> candles)
-        {
-            if (trend == Trend.Down)
-            {
-                var entryPrice = candle[Indicator.EMA8].Value + candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
-                //var stop = entryPrice + candle[Indicator.ATR].Value * StopAtrRatio;
-                var stop = candle[Indicator.EMA25].Value + candle[Indicator.ATR].Value * StopAtrRatio;
-                var limit = LimitRMultiple != null
-                    ? (decimal)entryPrice - (Math.Abs((decimal)entryPrice - (decimal)stop) * LimitRMultiple.Value)
-                    : (decimal?)null;
-
-                var trade = CreateOrder(market.Name,
-                    candle.Candle.CloseTime().AddSeconds((int)Timeframe.H2 * OrderExpiryCandles),
-                    (decimal)entryPrice, TradeDirection.Short, (decimal)candles[candles.Count - 1].Candle.CloseBid,
-                    candles[candles.Count - 1].Candle.CloseTime(), (decimal?)limit, (decimal)stop, 0.0005M);
-
-                return new List<Trade> { trade };
-            }
-            else
-            {
-                var entryPrice = candle[Indicator.EMA8].Value - candle[Indicator.ATR].Value * EntryOffsetAtrRatio;
-                //var stop = entryPrice - candle[Indicator.ATR].Value * StopAtrRatio;
-                var stop = candle[Indicator.EMA25].Value - candle[Indicator.ATR].Value * StopAtrRatio;
-                var limit = LimitRMultiple != null
-                    ? (decimal)entryPrice + (Math.Abs((decimal)entryPrice - (decimal)stop) * LimitRMultiple.Value)
-                    : (decimal?)null;
-
-                var trade = CreateOrder(market.Name,
-                    candle.Candle.CloseTime().AddSeconds((int)Timeframe.H2 * OrderExpiryCandles),
-                    (decimal)entryPrice, TradeDirection.Long, (decimal)candles[candles.Count - 1].Candle.CloseAsk,
-                    candles[candles.Count - 1].Candle.CloseTime(), (decimal?)limit, (decimal)stop, 0.0005M);
-
-                return new List<Trade> { trade };
-            }
-        }
-
-        private enum Trend
-        {
-            Up,
-            Down,
-            None
-        }
-
-        private bool IsBigCandleInTrendDirection(List<CandleAndIndicators> candles, Trend trend, int candleOffset)
-        {
-            var c = candles[candles.Count - 1 - candleOffset];
-
-            if (trend == Trend.Down)
-            {
-                var minPoint = c[Indicator.EMA8].Value - c[Indicator.ATR].Value * MinTriggerCandleMinAtrRatio;
-                var maxPoint = c[Indicator.EMA8].Value - c[Indicator.ATR].Value * MaxTriggerCandleMinAtrRatio;
-                if (c.Candle.CloseBid < minPoint && c.Candle.CloseBid > maxPoint && c.Colour() == CandleColour.Black) return true;
-            }
-
-            if (trend == Trend.Up)
-            {
-                var minPoint = c[Indicator.EMA8].Value + c[Indicator.ATR].Value * MinTriggerCandleMinAtrRatio;
-                var maxPoint = c[Indicator.EMA8].Value + c[Indicator.ATR].Value * MaxTriggerCandleMinAtrRatio;
-                if (c.Candle.CloseAsk > minPoint && c.Candle.CloseAsk < maxPoint && c.Colour() == CandleColour.White) return true;
-            }
-
-            return false;
-        }
-
-        private bool IsEMAsLinedUp(List<CandleAndIndicators> candles, Trend trend, int candleOffset)
-        {
-            var c = candles[candles.Count - 1 - candleOffset];
-
-            if (trend == Trend.Down && !(c[Indicator.EMA8].Value < c[Indicator.EMA25].Value && c[Indicator.EMA25].Value < c[Indicator.EMA50].Value)) return false;
-            if (trend == Trend.Up && !(c[Indicator.EMA8].Value > c[Indicator.EMA25].Value && c[Indicator.EMA25].Value > c[Indicator.EMA50].Value)) return false;
-
-            return true;
-        }
-
-        private Trend GetTrend(List<CandleAndIndicators> candles, int candleOffset)
-        {
-            if (candles.Count < 20) return Trend.None;
-
-            // Last candles must be trending
-            var ret = Trend.None;
-            for (var i = candles.Count - MinTrendingCandles - candleOffset; i < candles.Count - candleOffset; i++)
-            {
-                var c = candles[i];
-                var atr = c[Indicator.ATR].Value * MinEMATrendATRRatio;
-
-                if (c[Indicator.EMA8].Value + atr < c[Indicator.EMA25].Value && c[Indicator.EMA25].Value + atr < c[Indicator.EMA50].Value)
-                {
-                    if (ret == Trend.None || ret == Trend.Down)
-                        ret = Trend.Down;
-                    else
-                        return Trend.None;
-                }
-                else if (c[Indicator.EMA8].Value - atr > c[Indicator.EMA25].Value && c[Indicator.EMA25].Value - atr > c[Indicator.EMA50].Value)
-                {
-                    if (ret == Trend.None || ret == Trend.Up)
-                        ret = Trend.Up;
-                    else
-                        return Trend.None;
-                }
-                else
-                {
-                    return Trend.None;
-                }
-            }
-
-            return ret;
+            return null;
         }
     }
 }

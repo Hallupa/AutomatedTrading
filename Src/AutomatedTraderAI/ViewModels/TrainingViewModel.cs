@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 using Abt.Controls.SciChart.Numerics.CoordinateCalculators;
@@ -295,7 +293,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             var minYForAnnotations = candlesAndIndicators.Min(x => x.Candle.LowBid) * 0.95;
             for (var uptoIndex = startIndex; uptoIndex <= candlesAndIndicators.Count - 1; uptoIndex++)
             {
-                dataGenerator.CreateData(candlesAndIndicators, uptoIndex, ModelDataType.EMAsOnly, SelectedModel.InputsCount, out _, out _, out _, out var rawData);
+                dataGenerator.CreateRawData(candlesAndIndicators, uptoIndex, ModelDataType.EMAsOnly, SelectedModel.InputsCount, out var rawData);
 
                 var x = np.array(np.array(rawData)).reshape(new Shape(1, DataGenerator.GetDataPointsCount(SelectedModel.ModelDataType) * SelectedModel.InputsCount));
 
