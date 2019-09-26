@@ -24,6 +24,7 @@ def getMNISTDataSet():
 def getRawDataSet(directory):
     valuesCollection=[]
     labelsStrings=[]
+    labels=[]
 
     # Get raw path dataset
     all_paths = [str(path) for path in pathlib.Path(directory).glob('*.csv')]
@@ -31,14 +32,15 @@ def getRawDataSet(directory):
     for path in all_paths:
         with open(path, 'r') as file:
             string_values = file.read().split(',')
-            numeric_values = [float(string_value) for string_value in string_values]
+            numeric_values = [float(string_value) for string_value in string_values[1:]]
             valuesCollection.append(numeric_values)
+            labels.append(int(string_values[0]))
         labelsStrings.append(os.path.basename(path).split("_")[0])
 
     print("######## Got ", len(labelsStrings), "paths from ", directory)
 
     print("Getting NumPy arrays")
-    labels = StringsToInts(labelsStrings)
+    #labels = StringsToInts(labelsStrings)
     x_train = np.array(valuesCollection)
     y_train = np.array(labels)
 

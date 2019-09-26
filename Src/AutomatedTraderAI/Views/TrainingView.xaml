@@ -28,13 +28,28 @@
 
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
                     <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="650"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
                 <ListBox Grid.Column="0" ItemsSource="{Binding ModelsService.Models}" SelectedItem="{Binding SelectedModel}" DisplayMemberPath="DisplayText"/>
-                <ListBox Grid.Column="1" ItemsSource="{Binding SelectedModel.DataPoints}" SelectedItem="{Binding SelectedModelDataPoint}"/>
+                <ListBox Grid.Column="1" ItemsSource="{Binding SelectedModel.DataPoints}" SelectedItem="{Binding SelectedModelDataPoint}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontWeight="Bold" Text="DateTime: "/>
+                                <TextBlock Text="{Binding DateTime}" Width="150"/>
+                                <TextBlock FontWeight="Bold" Text="Market: "/>
+                                <TextBlock Text="{Binding Market}" Width="100"/>
+                                <TextBlock FontWeight="Bold" Text="Label: "/>
+                                <TextBlock Text="{Binding Label}" Width="100"/>
+                                <TextBlock FontWeight="Bold" Text="Label value: "/>
+                                <TextBlock Text="{Binding LabelValue}" Width="80"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Grid>
 
         </Grid>

@@ -27,10 +27,11 @@ namespace TraderTools.AI
         public string Label { get; set; }
         public string Market { get; set; }
         public DateTime DateTime { get; set; }
+        public int LabelValue { get; set; }
 
         public override string ToString()
         {
-            return $"{Label} {Market} {DateTime:dd-MM-yy HH:mm}";
+            return $"Label:{Label} Label value:{LabelValue} Market:{Market} Position:{DateTime:dd-MM-yy HH:mm}";
         }
     }
 
@@ -234,7 +235,7 @@ namespace TraderTools.AI
                 var path = Path.Combine(GetModelDirectory(model, _dataDirectoryService), $"{dp.Label}_{dpNum}.png");
                 SaveImage(path, imgArray, imgWidth, imgHeight);
                 path = Path.Combine(GetModelDirectory(model, _dataDirectoryService), $"{dp.Label}_{dpNum}.csv");
-                SaveRawData(path, rawData);
+                SaveRawDataAndLabel(path, rawData, dp.LabelValue);
             }
         }
 
@@ -243,7 +244,7 @@ namespace TraderTools.AI
             return Path.Combine(dataDirectoryService.MainDirectoryWithApplicationName, "Models", model.Name);
         }
 
-        private void SaveRawData(string path, float[] data)
+        private void SaveRawDataAndLabel(string path, float[] data, int label)
         {
             var dir = Path.GetDirectoryName(path);
             if (!Directory.Exists(dir))
@@ -251,7 +252,7 @@ namespace TraderTools.AI
                 Directory.CreateDirectory(dir);
             }
 
-            File.WriteAllText(path, string.Join(",", data.Select(x => x.ToString())));
+            File.WriteAllText(path, string.Join(",",   new [] { label.ToString() }.Union(data.Select(x => x.ToString()))));
         }
 
         private void SaveImage(string path, byte[,] imgArray, int width, int height)
