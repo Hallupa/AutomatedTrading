@@ -32,32 +32,8 @@ namespace TraderTools.AutomatedTraderAI.Services
 
             var models = JsonConvert.DeserializeObject<List<Model>>(File.ReadAllText(saveName));
 
-            // Upgrade models
-            var updated = false;
-            foreach (var model in models)
-            {
-                if (model.DataPoints.Any(x => x.LabelValue == 0))
-                {
-                    updated = true;
-                    var lookup = new Dictionary<string, int>();
-                    var nextValue = 1;
-                    foreach (var dp in model.DataPoints)
-                    {
-                        if (!lookup.ContainsKey(dp.Label))
-                        {
-                            lookup[dp.Label] = nextValue;
-                            nextValue++;
-                        }
-
-                        dp.LabelValue = lookup[dp.Label];
-                    }
-                }
-            }
-
             Models.Clear();
             Models.AddRange(models);
-
-            if (updated) SaveModels();
         }
 
         public void SaveModels()

@@ -19,7 +19,8 @@ namespace TraderTools.AI
     {
         EMAsAndCandles = 1,
         EMAsOnly = 2,
-        CandlesRelativeTo8EMA = 3
+        CandlesRelativeTo8EMA = 3,
+        EMA8AndCandles = 4
     }
 
     public class ModelDataPoint
@@ -42,6 +43,18 @@ namespace TraderTools.AI
 
         public ObservableCollection<ModelDataPoint> DataPoints { get; set; } = new ObservableCollection<ModelDataPoint>();
 
+        public void AddDataPoint(ModelDataPoint point)
+        {
+            DataPoints.Add(point);
+            OnPropertyChanged("TotalOutputs");
+        }
+
+        public void RemoveDataPoint(ModelDataPoint point)
+        {
+            DataPoints.Remove(point);
+            OnPropertyChanged("TotalOutputs");
+        }
+
         public int InputsCount
         {
             get => _inputsCount;
@@ -55,6 +68,8 @@ namespace TraderTools.AI
 
         public string DisplayText => $"{Name} Inputs: {InputsCount} ModelDataType: {ModelDataType}";
         public ModelDataType ModelDataType { get; set; }
+
+        public int TotalOutputs => DataPoints.Select(x => x.Label).Distinct().Count();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -116,14 +131,22 @@ namespace TraderTools.AI
             for (var i = uptoIndex - numberOfCandles + 1; i <= uptoIndex; i++)
             {
                 if (first || candlesWithIndicators[i][Indicator.EMA8].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA8].Value;
-                if (first || candlesWithIndicators[i][Indicator.EMA25].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA25].Value;
-                if (first || candlesWithIndicators[i][Indicator.EMA50].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA50].Value;
+
+                if (modelDataType != ModelDataType.EMA8AndCandles)
+                {
+                    if (first || candlesWithIndicators[i][Indicator.EMA25].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA25].Value;
+                    if (first || candlesWithIndicators[i][Indicator.EMA50].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA50].Value;
+                }
 
                 if (first || candlesWithIndicators[i][Indicator.EMA8].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA8].Value;
-                if (first || candlesWithIndicators[i][Indicator.EMA25].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA25].Value;
-                if (first || candlesWithIndicators[i][Indicator.EMA50].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA50].Value;
 
-                if (modelDataType == ModelDataType.EMAsAndCandles)
+                if (modelDataType != ModelDataType.EMA8AndCandles)
+                {
+                    if (first || candlesWithIndicators[i][Indicator.EMA25].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA25].Value;
+                    if (first || candlesWithIndicators[i][Indicator.EMA50].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA50].Value;
+                }
+
+                if (modelDataType == ModelDataType.EMAsAndCandles || modelDataType == ModelDataType.EMA8AndCandles)
                 {
                     if (first || candlesWithIndicators[i].Candle.HighBid > yMax) yMax = candlesWithIndicators[i].Candle.HighBid;
                     if (first || candlesWithIndicators[i].Candle.LowBid < yLow) yLow = candlesWithIndicators[i].Candle.LowBid;
@@ -141,7 +164,7 @@ namespace TraderTools.AI
             {
                 var c = candlesWithIndicators[uptoIndex - numberOfCandles + i + 1];
 
-                if (modelDataType == ModelDataType.EMAsAndCandles)
+                if (modelDataType == ModelDataType.EMAsAndCandles || modelDataType == ModelDataType.EMA8AndCandles)
                 {
                     rawDataList.Add(convertToRaw(c.Candle.HighBid));
                     rawDataList.Add(convertToRaw(c.Candle.LowBid));
@@ -150,8 +173,12 @@ namespace TraderTools.AI
                 }
 
                 rawDataList.Add(convertToRaw(c[Indicator.EMA8].Value));
-                rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
-                rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
+
+                if (modelDataType != ModelDataType.EMA8AndCandles)
+                {
+                    rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
+                    rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
+                }
             }
 
             rawData = rawDataList.ToArray();

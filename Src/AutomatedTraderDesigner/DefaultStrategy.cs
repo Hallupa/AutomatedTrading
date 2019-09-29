@@ -38,9 +38,7 @@ namespace AutomatedTraderDesigner
             var expiry = c.Candle.CloseTime().AddSeconds((int)Timeframe.H4 * 2);
             var risk = 0.0005M;
 
-            var trade1 = CreateOrder(market.Name, expiry,
-                (decimal)entryPrice, TradeDirection.Long, (decimal)candleAndIndicators[candleAndIndicators.Count - 1].Candle.CloseBid,
-                candleAndIndicators[candleAndIndicators.Count - 1].Candle.CloseTime(), (decimal?)limit, (decimal)stop, risk);
+            var trade1 = CreateOrder(market.Name, expiry, (decimal)entryPrice, TradeDirection.Long, (decimal?)limit, (decimal)stop, risk);
 
             var trade2 = CreateMarketOrder(market.Name, TradeDirection.Long, c.Candle, (decimal)stop, risk, (decimal)limit);
 

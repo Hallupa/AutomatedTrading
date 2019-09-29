@@ -187,6 +187,7 @@ namespace AutomatedTrader.ViewModels
                         var previousTrades = _brokerAccount.Trades.Where(t => t.Market == market).ToList();
 
                         // Create new trades for market
+                        // TODO if (strategy is StrategyBase b) b.CurrentCandle = 
                         var newTrades = strategy.CreateNewTrades(_marketDetailsService.GetMarketDetails("FXCM", market),
                             candles, previousTrades, _tradeCalculatorService);
                         if (newTrades != null && newTrades.Count > 0)

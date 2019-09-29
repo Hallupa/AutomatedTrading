@@ -161,7 +161,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
 
             var script = "ImageTest.py";
             var directory = DataGenerator.GetModelDirectory(SelectedModel, _dataDirectoryService);
-            var outputs = SelectedModel.DataPoints.Select(x => x.Label).Distinct().Count() + 1;
+            var outputs = SelectedModel.TotalOutputs;
 
             var scriptDrectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Tensorflow");
             Directory.SetCurrentDirectory(scriptDrectory);
@@ -199,7 +199,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             if (SelectedModelDataPoint == null) return;
             if (SelectedModel == null) return;
 
-            SelectedModel.DataPoints.Remove(SelectedModelDataPoint);
+            SelectedModel.RemoveDataPoint(SelectedModelDataPoint);
             ModelsService.SaveModels();
         }
 
@@ -223,7 +223,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
                 Label = label
             };
 
-            SelectedModel.DataPoints.Add(dataPoint);
+            SelectedModel.AddDataPoint(dataPoint);
             ModelsService.SaveModels();
         }
 
@@ -248,7 +248,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             if (!res.OKClicked) return;
             var inputsCount = int.Parse(res.Text);
 
-            res = InputView.Show("Enter model data type. 1 = EMAs and candles, 2 = EMAs only, 3 = Candles relative to 8EMA");
+            res = InputView.Show("Model data type. 1=EMAs+candles,2=EMAs,3=Candles relative to 8EMA,4=8EMA+candles");
             if (!res.OKClicked) return;
             var modelDataType = (ModelDataType)int.Parse(res.Text);
 
@@ -300,10 +300,10 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
                 var y = model.Predict(x)[0];
 
                 // Get which index is highest
-                var maxIndex = 0;
-                for (var i = 1; i < y.size; i++)
+                var maxIndex = -1;
+                for (var i = 0; i < y.size; i++)
                 {
-                    if ((float)y[i] > (float)y[maxIndex]) maxIndex = i;
+                    if ((float)y[i] > 0.9 && (maxIndex == -1 || (float)y[i] > (float)y[maxIndex])) maxIndex = i;
                 }
 
                 var classificationIndex = maxIndex;
@@ -316,22 +316,22 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
                     var opacity = 0.2;
                     switch (currentClassificationIndex)
                     {
-                        case 1:
+                        case 0:
                             // Down
                             color = Brushes.DarkRed;
                             opacity = 0.6;
                             break;
-                        case 2:
+                        case 1:
                             color = Brushes.Goldenrod;
                             opacity = 0.6;
                             break;
-                        case 3:
+                        case 2:
                             color = Brushes.Aqua;
                             break;
-                        case 4:
+                        case 3:
                             color = Brushes.Blue;
                             break;
-                        case 5:
+                        case 4:
                             // Up
                             color = Brushes.LimeGreen;
                             opacity = 0.6;
