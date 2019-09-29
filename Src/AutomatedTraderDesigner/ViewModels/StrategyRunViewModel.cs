@@ -174,7 +174,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
             var completed = 0;
 
-            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(1, d =>
+            _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
             {
                 var strategyTester = new SimulationRunner(_candlesService, _tradeCalculatorService, _marketDetailsService, 
                     SimulationRunnerFlags.DoNotValidateStopsLimitsOrders | SimulationRunnerFlags.DoNotCacheM1Candles);

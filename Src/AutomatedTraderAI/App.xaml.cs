@@ -30,7 +30,7 @@ namespace TraderTools.AutomatedTraderAI
 
             DependencyContainer.ComposeParts(this);
 
-            _dataDirectoryService.SetApplicationName("AutomatedTraderAI");
+            _dataDirectoryService.SetApplicationName("AutomatedTrader");
 
             if (!Directory.Exists(_dataDirectoryService.MainDirectoryWithApplicationName))
             {

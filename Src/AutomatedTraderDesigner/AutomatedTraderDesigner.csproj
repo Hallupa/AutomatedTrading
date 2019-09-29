@@ -158,6 +158,7 @@
     </Compile>
     <Compile Include="Services\StrategyRunnerResultsService.cs" />
     <Compile Include="Services\UIService.cs" />
+    <Compile Include="Test.cs" />
     <Compile Include="ViewModels\MainWindowsViewModel.cs" />
     <Compile Include="ViewModels\StrategyCustomRunViewModel.cs" />
     <Compile Include="ViewModels\StrategyRunResultsViewModel.cs" />

@@ -25,6 +25,7 @@ def getRawDataSet(directory):
     valuesCollection=[]
     labelsStrings=[]
     labels=[]
+    x_train = np.empty
 
     # Get raw path dataset
     all_paths = [str(path) for path in pathlib.Path(directory).glob('*.csv')]
@@ -32,19 +33,33 @@ def getRawDataSet(directory):
     for path in all_paths:
         with open(path, 'r') as file:
             string_values = file.read().split(',')
-            numeric_values = [float(string_value) for string_value in string_values[1:]]
-            valuesCollection.append(numeric_values)
+            numeric_values = []
+
+            values_to_process = string_values[1:]
+            print('Data row size',len(values_to_process),path)
+            for v in [float(string_value) for string_value in values_to_process]:
+                #print("V type",type(v))
+                numeric_values.append(v)
+                if (v >= 1):
+                    print('Variable''s value is over 1.0')
+                    sys.exit()
+			
+			# numeric_values = [float(string_value) for string_value in string_values[1:]]
+
+            valuesCollection.append(np.array(numeric_values))
             labels.append(int(string_values[0]))
         labelsStrings.append(os.path.basename(path).split("_")[0])
 
     print("######## Got ", len(labelsStrings), "paths from ", directory)
 
-    print("Getting NumPy arrays")
     #labels = StringsToInts(labelsStrings)
     x_train = np.array(valuesCollection)
     y_train = np.array(labels)
+    print("####### x_train[0] type",type(x_train[0])," z ", x_train[0][0])
+    for v in x_train[0]:
+        print("####### x_train[0] value:",type(v))
 
-    print("Returning data")
+    print("######## Returning data")
     ratioForXTrain = 1.0 # 0.75
     train_num = (int)(len(x_train) * ratioForXTrain)
     return (x_train[:train_num], y_train[:train_num]),(x_train[train_num:], y_train[train_num:])

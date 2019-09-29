@@ -9,79 +9,14 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Hallupa.Library;
+using Newtonsoft.Json;
 using TraderTools.Basics;
-using TraderTools.Core.Services;
 using TraderTools.Simulation;
 
 namespace TraderTools.AI
 {
-    public enum ModelDataType
-    {
-        EMAsAndCandles = 1,
-        EMAsOnly = 2,
-        CandlesRelativeTo8EMA = 3,
-        EMA8AndCandles = 4
-    }
-
-    public class ModelDataPoint
-    {
-        public string Label { get; set; }
-        public string Market { get; set; }
-        public DateTime DateTime { get; set; }
-        public int LabelValue { get; set; }
-
-        public override string ToString()
-        {
-            return $"Label:{Label} Label value:{LabelValue} Market:{Market} Position:{DateTime:dd-MM-yy HH:mm}";
-        }
-    }
-
-    public class Model : INotifyPropertyChanged
-    {
-        private int _inputsCount;
-        public string Name { get; set; }
-
-        public ObservableCollection<ModelDataPoint> DataPoints { get; set; } = new ObservableCollection<ModelDataPoint>();
-
-        public void AddDataPoint(ModelDataPoint point)
-        {
-            DataPoints.Add(point);
-            OnPropertyChanged("TotalOutputs");
-        }
-
-        public void RemoveDataPoint(ModelDataPoint point)
-        {
-            DataPoints.Remove(point);
-            OnPropertyChanged("TotalOutputs");
-        }
-
-        public int InputsCount
-        {
-            get => _inputsCount;
-            set
-            {
-                _inputsCount = value;
-                OnPropertyChanged();
-                OnPropertyChanged("DisplayText");
-            }
-        }
-
-        public string DisplayText => $"{Name} Inputs: {InputsCount} ModelDataType: {ModelDataType}";
-        public ModelDataType ModelDataType { get; set; }
-
-        public int TotalOutputs => DataPoints.Select(x => x.Label).Distinct().Count();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
-
     public class DataGenerator
     {
-        [Import] private MarketsService _marketsSetvice;
         [Import] private IBrokersService _brokersService;
         [Import] private IBrokersCandlesService _candlesService;
         [Import] private IDataDirectoryService _dataDirectoryService;
@@ -93,13 +28,13 @@ namespace TraderTools.AI
             _broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
         }
 
-        public void CreateData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles,
+        /*public void CreateData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles,
             out int imgWidth, out int imgHeight, out byte[,] imgArray)
         {
             var candlesWithIndicators = GetCandlesWithIndicators(market, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 }, dateTime);
 
             CreateData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles, out imgWidth, out imgHeight, out imgArray);
-        }
+        }*/
 
         public void CreateRawData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles, out float[] rawData)
         {
@@ -110,13 +45,18 @@ namespace TraderTools.AI
 
         public static int GetDataPointsCount(ModelDataType modelDataType)
         {
-            switch(modelDataType)
-            {
-                case ModelDataType.EMAsOnly:
-                    return 3;
-            }
+            var ret = 0;
+            if (modelDataType.HasFlag(ModelDataType.EMA8)) ret++;
+            if (modelDataType.HasFlag(ModelDataType.EMA25)) ret++;
+            if (modelDataType.HasFlag(ModelDataType.EMA50)) ret++;
+            if (modelDataType.HasFlag(ModelDataType.Candles)) ret += 4;
 
-            throw new ApplicationException();
+            return ret;
+        }
+
+        public void CreateRawData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, IModelDetails m, out float[] rawData)
+        {
+            CreateRawData(candlesWithIndicators, uptoIndex, m.ModelDataType, m.InputsCount, out rawData);
         }
 
         public void CreateRawData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, ModelDataType modelDataType, int numberOfCandles, out float[] rawData)
@@ -127,26 +67,34 @@ namespace TraderTools.AI
             var yMax = float.MinValue;
             var yLow = float.MaxValue;
 
+            var expectedValues = 0;
+            if (modelDataType.HasFlag(ModelDataType.EMA8)) expectedValues += numberOfCandles;
+            if (modelDataType.HasFlag(ModelDataType.EMA25)) expectedValues += numberOfCandles;
+            if (modelDataType.HasFlag(ModelDataType.EMA50)) expectedValues += numberOfCandles;
+            if (modelDataType.HasFlag(ModelDataType.Candles)) expectedValues += numberOfCandles * 4;
+
             var first = true;
             for (var i = uptoIndex - numberOfCandles + 1; i <= uptoIndex; i++)
             {
-                if (first || candlesWithIndicators[i][Indicator.EMA8].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA8].Value;
-
-                if (modelDataType != ModelDataType.EMA8AndCandles)
-                {
-                    if (first || candlesWithIndicators[i][Indicator.EMA25].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA25].Value;
-                    if (first || candlesWithIndicators[i][Indicator.EMA50].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA50].Value;
+                if (modelDataType.HasFlag(ModelDataType.EMA8))
+                { 
+                    if (first || candlesWithIndicators[i][Indicator.EMA8].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA8].Value;
+                    if (first || candlesWithIndicators[i][Indicator.EMA8].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA8].Value;
                 }
 
-                if (first || candlesWithIndicators[i][Indicator.EMA8].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA8].Value;
-
-                if (modelDataType != ModelDataType.EMA8AndCandles)
+                if (modelDataType.HasFlag(ModelDataType.EMA25))
                 {
+                    if (first || candlesWithIndicators[i][Indicator.EMA25].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA25].Value;
                     if (first || candlesWithIndicators[i][Indicator.EMA25].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA25].Value;
+                }
+
+                if (modelDataType.HasFlag(ModelDataType.EMA50))
+                {
+                    if (first || candlesWithIndicators[i][Indicator.EMA50].Value > yMax) yMax = candlesWithIndicators[i][Indicator.EMA50].Value;
                     if (first || candlesWithIndicators[i][Indicator.EMA50].Value < yLow) yLow = candlesWithIndicators[i][Indicator.EMA50].Value;
                 }
 
-                if (modelDataType == ModelDataType.EMAsAndCandles || modelDataType == ModelDataType.EMA8AndCandles)
+                if (modelDataType.HasFlag(ModelDataType.Candles))
                 {
                     if (first || candlesWithIndicators[i].Candle.HighBid > yMax) yMax = candlesWithIndicators[i].Candle.HighBid;
                     if (first || candlesWithIndicators[i].Candle.LowBid < yLow) yLow = candlesWithIndicators[i].Candle.LowBid;
@@ -164,7 +112,7 @@ namespace TraderTools.AI
             {
                 var c = candlesWithIndicators[uptoIndex - numberOfCandles + i + 1];
 
-                if (modelDataType == ModelDataType.EMAsAndCandles || modelDataType == ModelDataType.EMA8AndCandles)
+                if (modelDataType.HasFlag(ModelDataType.Candles))
                 {
                     rawDataList.Add(convertToRaw(c.Candle.HighBid));
                     rawDataList.Add(convertToRaw(c.Candle.LowBid));
@@ -172,21 +120,23 @@ namespace TraderTools.AI
                     rawDataList.Add(convertToRaw(c.Candle.CloseBid));
                 }
 
-                rawDataList.Add(convertToRaw(c[Indicator.EMA8].Value));
+                if (modelDataType.HasFlag(ModelDataType.EMA8)) rawDataList.Add(convertToRaw(c[Indicator.EMA8].Value));
 
-                if (modelDataType != ModelDataType.EMA8AndCandles)
-                {
-                    rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
-                    rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
-                }
+                if (modelDataType.HasFlag(ModelDataType.EMA25)) rawDataList.Add(convertToRaw(c[Indicator.EMA25].Value));
+                if (modelDataType.HasFlag(ModelDataType.EMA50)) rawDataList.Add(convertToRaw(c[Indicator.EMA50].Value));
             }
 
             rawData = rawDataList.ToArray();
+
+            if (rawData.Length != expectedValues)
+            {
+                throw new ApplicationException($"Actual values: {rawData.Length} does not equal expected values {expectedValues}");
+            }
         }
 
-        public void CreateData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, ModelDataType modelDataType, int numberOfCandles,
+        /*public void CreateData(List<CandleAndIndicators> candlesWithIndicators, int uptoIndex, ModelDataType modelDataType, int numberOfCandles,
             out int imgWidth, out int imgHeight, out byte[,] imgArray)
-        { 
+        {
             imgWidth = numberOfCandles * 3;
             imgHeight = modelDataType == ModelDataType.EMAsAndCandles ? 100 : 60;
             byte closeUpColor = 1;
@@ -213,7 +163,7 @@ namespace TraderTools.AI
                     if (first || candlesWithIndicators[i].Candle.LowBid < yLow) yLow = candlesWithIndicators[i].Candle.LowBid;
                 }
 
-                first = false; 
+                first = false;
             }
 
             yMax *= 1.005F;
@@ -245,28 +195,31 @@ namespace TraderTools.AI
 
                 prevC = c;
             }
-        }
+        }*/
 
-        public void CreateData(Model model)
+        public void CreateData(IModelDetails model)
         {
             var dpNum = 0;
+
+            var modelDirectory = GetModelDirectory(model, _dataDirectoryService);
+            Directory.GetFiles(modelDirectory, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(File.Delete);
 
             for (var dpIndex = 1; dpIndex < model.DataPoints.Count; dpIndex++)
             {
                 var dp = model.DataPoints[dpIndex];
                 dpNum++;
 
-                CreateData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var imgWidth, out var imgHeight, out var imgArray);
+                // CreateData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var imgWidth, out var imgHeight, out var imgArray);
                 CreateRawData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var rawData);
 
-                var path = Path.Combine(GetModelDirectory(model, _dataDirectoryService), $"{dp.Label}_{dpNum}.png");
-                SaveImage(path, imgArray, imgWidth, imgHeight);
-                path = Path.Combine(GetModelDirectory(model, _dataDirectoryService), $"{dp.Label}_{dpNum}.csv");
+                var path = Path.Combine(modelDirectory, $"{dp.Label}_{dpNum}.png");
+                // SaveImage(path, imgArray, imgWidth, imgHeight);
+                path = Path.Combine(modelDirectory, $"{dp.Label}_{dpNum}.csv");
                 SaveRawDataAndLabel(path, rawData, dp.LabelValue);
             }
         }
 
-        public static string GetModelDirectory(Model model, IDataDirectoryService dataDirectoryService)
+        public static string GetModelDirectory(IModelDetails model, IDataDirectoryService dataDirectoryService)
         {
             return Path.Combine(dataDirectoryService.MainDirectoryWithApplicationName, "Models", model.Name);
         }
@@ -279,7 +232,8 @@ namespace TraderTools.AI
                 Directory.CreateDirectory(dir);
             }
 
-            File.WriteAllText(path, string.Join(",",   new [] { label.ToString() }.Union(data.Select(x => x.ToString()))));
+            var fileData = string.Join(",", new[] {label.ToString()}.Concat(data.Select(x => x.ToString())));
+            File.WriteAllText(path, fileData);
         }
 
         private void SaveImage(string path, byte[,] imgArray, int width, int height)

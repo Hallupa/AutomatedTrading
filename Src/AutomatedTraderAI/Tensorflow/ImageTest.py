@@ -41,8 +41,8 @@ savePath = directory + "\\model.h5"
 print("####### Running #######")
 
 print("####### Got",len(x_train),"training inputs. Got",len(x_test),"test inputs")
-print("####### x_train",type(x_train),"y_train",type(y_train))
-print("####### x_train[0]",type(x_train[0]),"y_train[0]",type(y_train[0]))
+# print("####### x_train",type(x_train),"y_train",type(y_train))
+print("####### x_train[0] type",type(x_train[0]),"y_train[0] type",type(y_train[0]))
 print("####### Data shape",x_train[0].shape)
 
 # Setup model

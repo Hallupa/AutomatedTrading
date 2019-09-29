@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -16,11 +17,10 @@ using log4net;
 using Numpy;
 using Numpy.Models;
 using TraderTools.AI;
-using TraderTools.AutomatedTraderAI.Services;
 using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.ViewModels;
-using Model = TraderTools.AI.Model;
+using TraderTools.Simulation;
 
 namespace TraderTools.AutomatedTraderAI.ViewModels
 {
@@ -32,7 +32,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
         [Import] private IBrokersCandlesService _candlesService;
         [Import] private IDataDirectoryService _dataDirectoryService;
         private Market _selectedMarket;
-        private Model _selectedModel;
+        private IModelDetails _selectedModel;
         private ModelDataPoint _selectedModelDataPoint;
 
         public TrainingViewModel()
@@ -70,7 +70,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
 
         public DelegateCommand TestModelCommand { get; private set; }
 
-        public Model SelectedModel
+        public IModelDetails SelectedModel
         {
             get => _selectedModel;
             set
@@ -216,11 +216,25 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             var dataSeries = ChartViewModelSmaller1.ChartPaneViewModels[0].ChartSeriesViewModels[0].DataSeries;
             var latestDate = ((ICategoryCoordinateCalculator)dataSeries.ParentSurface.XAxis.GetCurrentCoordinateCalculator()).TransformIndexToData(maxIndexShown);
 
+            var labelValuesLookup = new Dictionary<string, int>();
+            foreach (var dp in SelectedModel.DataPoints)
+            {
+                if (!labelValuesLookup.ContainsKey(dp.Label))
+                {
+                    labelValuesLookup[dp.Label] = dp.LabelValue;
+                }
+            }
+
+            var newDpLabelValue = labelValuesLookup.ContainsKey(label)
+                ? labelValuesLookup[label]
+                : (labelValuesLookup.Values.Count > 0 ? labelValuesLookup.Values.Max() + 1 : 0);
+
             var dataPoint = new ModelDataPoint
             {
                 Market = SelectedMarket.Name,
                 DateTime = latestDate,
-                Label = label
+                Label = label,
+                LabelValue = newDpLabelValue
             };
 
             SelectedModel.AddDataPoint(dataPoint);
@@ -233,7 +247,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
 
             if (MessageBox.Show("Are you sure?", "Confirm delete", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                ModelsService.Models.Remove(SelectedModel);
+                ModelsService.Models.Remove((ModelDetails)SelectedModel);
                 ModelsService.SaveModels();
             }
         }
@@ -248,11 +262,11 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             if (!res.OKClicked) return;
             var inputsCount = int.Parse(res.Text);
 
-            res = InputView.Show("Model data type. 1=EMAs+candles,2=EMAs,3=Candles relative to 8EMA,4=8EMA+candles");
+            res = InputView.Show("Model data type. Flags = 1=8EMA, 2=25EMA, 4=50EMA,8=candles", 800);
             if (!res.OKClicked) return;
             var modelDataType = (ModelDataType)int.Parse(res.Text);
 
-            var model = new Model
+            var model = new ModelDetails
             {
                 Name = name,
                 InputsCount = inputsCount,
@@ -293,7 +307,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             var minYForAnnotations = candlesAndIndicators.Min(x => x.Candle.LowBid) * 0.95;
             for (var uptoIndex = startIndex; uptoIndex <= candlesAndIndicators.Count - 1; uptoIndex++)
             {
-                dataGenerator.CreateRawData(candlesAndIndicators, uptoIndex, ModelDataType.EMAsOnly, SelectedModel.InputsCount, out var rawData);
+                dataGenerator.CreateRawData(candlesAndIndicators, uptoIndex, SelectedModel.ModelDataType, SelectedModel.InputsCount, out var rawData);
 
                 var x = np.array(np.array(rawData)).reshape(new Shape(1, DataGenerator.GetDataPointsCount(SelectedModel.ModelDataType) * SelectedModel.InputsCount));
 

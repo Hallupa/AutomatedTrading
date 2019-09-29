@@ -113,6 +113,8 @@ namespace AutomatedTraderDesigner.ViewModels
                 }
             }
 
+            //_strategyService.RegisterStrategy(new RandomTradesWithTrend(), false);
+
             _strategyService.SetStrategiesToUseRiskSizing(false);
             _strategyService.NotifyStrategiesChanged();
         }
@@ -133,7 +135,7 @@ namespace AutomatedTraderDesigner.ViewModels
             }
         }
 
-        public ObservableCollection<string> StrategyFilenames { get; private set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> StrategyFilenames { get; } = new ObservableCollection<string>();
 
         private void CreateStrategy()
         {
