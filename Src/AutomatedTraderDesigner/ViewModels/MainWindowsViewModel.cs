@@ -73,18 +73,18 @@ namespace AutomatedTraderDesigner.ViewModels
             // Setup brokers and load accounts
             _brokersService.AddBrokers(brokers);
 
-            Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
+            Task.Run((Action)Start); // If DLL binding errors, fix is to build in 64 bit
 
             EventManager.RegisterClassHandler(typeof(Window), Keyboard.KeyDownEvent, new KeyEventHandler(UIElement_OnPreviewKeyDown), true);
 
-            _x = Py.GIL();
+            //_x = Py.GIL();
             //using (Py.GIL())
             {
             }
 
             //using (Py.GIL())
             {
-                PythonEngine.BeginAllowThreads();
+                //PythonEngine.BeginAllowThreads();
             }
         }
 

@@ -61,7 +61,7 @@ namespace AutomatedTrader.ViewModels
 
             UpdateStrategiesService();
 
-            Task.Run(Start); // If DLL binding errors, fix is to build in 64 bit
+            Task.Run((Action)Start); // If DLL binding errors, fix is to build in 64 bit
         }
 
         private void UpdateStrategiesService()

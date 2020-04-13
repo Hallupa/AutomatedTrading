@@ -8,6 +8,7 @@ using log4net;
 using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
+using TraderTools.Simulation;
 
 namespace TraderTools.AutomatedTraderAI
 {
@@ -27,6 +28,7 @@ namespace TraderTools.AutomatedTraderAI
             DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
             DependencyContainer.AddAssembly(typeof(IBrokersService).Assembly);
             DependencyContainer.AddAssembly(typeof(MarketsService).Assembly);
+            DependencyContainer.AddAssembly(typeof(ModelsService).Assembly);
 
             DependencyContainer.ComposeParts(this);
 

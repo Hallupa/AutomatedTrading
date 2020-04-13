@@ -31,6 +31,11 @@ namespace AutomatedTraderDesigner.ViewModels
 
             _uiService.ViewTradeObservable.Subscribe(o =>
             {
+                if (SelectedTrade.Timeframe != null)
+                {
+                    LargeChartTimeframe = SelectedTrade.Timeframe.Value;
+                }
+
                 ViewTrade(SelectedTrade, false);
             });
 

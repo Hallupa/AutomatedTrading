@@ -28,8 +28,8 @@
 
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
-                    <ColumnDefinition Width="650"/>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="750"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
@@ -45,7 +45,8 @@
                                 <TextBlock FontWeight="Bold" Text="Label: "/>
                                 <TextBlock Text="{Binding Label}" Width="100"/>
                                 <TextBlock FontWeight="Bold" Text="Label value: "/>
-                                <TextBlock Text="{Binding LabelValue}" Width="80"/>
+                                <TextBlock Text="{Binding LabelValue}" Width="40"/>
+                                <TextBlock Text="{Binding LabelColour}" Width="80"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

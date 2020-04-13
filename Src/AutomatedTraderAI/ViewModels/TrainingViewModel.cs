@@ -76,6 +76,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             set
             {
                 _selectedModel = value;
+                SmallChartTimeframe = _selectedModel.Timeframe;
                 OnPropertyChanged();
             }
         }
@@ -266,11 +267,16 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
             if (!res.OKClicked) return;
             var modelDataType = (ModelDataType)int.Parse(res.Text);
 
+            res = InputView.Show("Timeframe: 1 = D1, 2 = H4", 800);
+            if (!res.OKClicked) return;
+            var timeframe = int.Parse(res.Text) == 0 ? Timeframe.D1 : Timeframe.H4;
+
             var model = new ModelDetails
             {
                 Name = name,
                 InputsCount = inputsCount,
-                ModelDataType = modelDataType
+                ModelDataType = modelDataType,
+                Timeframe = timeframe
             };
 
             ModelsService.Models.Add(model);
@@ -298,7 +304,7 @@ namespace TraderTools.AutomatedTraderAI.ViewModels
                 out var imgData,
                 out var rawData);*/
 
-            var candlesAndIndicators = dataGenerator.GetCandlesWithIndicators(SelectedMarket.Name, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 });
+            var candlesAndIndicators = dataGenerator.GetCandlesWithIndicators(SelectedMarket.Name, SelectedModel.Timeframe, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 });
 
             var currentClassificationIndex = -1;
             var startIndex = 80;
