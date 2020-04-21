@@ -44,6 +44,7 @@ namespace AutomatedTraderDesigner.ViewModels
         private IDisposable _strategiesUpdatedDisposable;
         private List<IStrategy> _strategies;
         private string _savedResultsPath;
+        private bool _stopStrategyEnabled;
         public static string CustomCode { get; set; }
 
         #endregion
@@ -67,9 +68,16 @@ namespace AutomatedTraderDesigner.ViewModels
             }
 
             RunStrategyCommand = new DelegateCommand(RunStrategyClicked);
+            StopStrategyCommand = new DelegateCommand(StopStrategyClicked);
             StrategiesUpdated(null);
             _strategiesUpdatedDisposable = StrategyService.UpdatedObservable.Subscribe(StrategiesUpdated);
             _uiService.RegisterF5Action(() => RunStrategyClicked(null));
+        }
+
+        private void StopStrategyClicked(object obj)
+        {
+            Log.Info("Stopping simulation");
+            _stopRun = true;
         }
 
         private void StrategiesUpdated(object obj)
@@ -81,7 +89,7 @@ namespace AutomatedTraderDesigner.ViewModels
 
             foreach (var selectedStrategyName in selectedStrategyNames)
             {
-                var newSelectedStrategy = Strategies.FirstOrDefault(s => s.Name == selectedStrategyName);
+                var newSelectedStrategy = Strategies.Where(t => t != null).FirstOrDefault(s => s.Name == selectedStrategyName);
                 if (newSelectedStrategy != null && SelectedStrategies.Cast<IStrategy>().All(s => s.Name != selectedStrategyName))
                 {
                     SelectedStrategies.Add(newSelectedStrategy);
@@ -111,6 +119,7 @@ namespace AutomatedTraderDesigner.ViewModels
         public StrategyService StrategyService { get; private set; }
         public ObservableCollection<string> Markets { get; private set; }
         public ICommand RunStrategyCommand { get; private set; }
+        public ICommand StopStrategyCommand { get; private set; }
         public List<object> SelectedStrategies { get; set; } = new List<object>();
         public List<object> SelectedMarkets { get; set; } = new List<object>();
         public string StartDate { get; set; }
@@ -128,6 +137,16 @@ namespace AutomatedTraderDesigner.ViewModels
             }
         }
 
+        public bool StopStrategyEnabled
+        {
+            get => _stopStrategyEnabled;
+            set
+            {
+                _stopStrategyEnabled = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         #endregion
 
         private void RunStrategyClicked(object o)
@@ -138,6 +157,7 @@ namespace AutomatedTraderDesigner.ViewModels
             }
 
             RunStrategyEnabled = false;
+            StopStrategyEnabled = true;
 
             Task.Run((Action)RunStrategy);
         }
@@ -148,9 +168,11 @@ namespace AutomatedTraderDesigner.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
+        private bool _stopRun = false;
         private void RunStrategy()
         {
             Log.Info("Running simulation");
+            _stopRun = false;
             var stopwatch = Stopwatch.StartNew();
             var strategies = SelectedStrategies.ToList();
             var broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
@@ -170,17 +192,19 @@ namespace AutomatedTraderDesigner.ViewModels
                 NotifyPropertyChanged("AverageLosingRRRTrades");
 
                 RunStrategyEnabled = false;
+                StopStrategyEnabled = true;
             }));
 
             var completed = 0;
 
             _producerConsumer = new ProducerConsumer<(IStrategy Strategy, MarketDetails Market)>(3, d =>
             {
+                if (_stopRun) return ProducerConsumerActionResult.Stop;
                 var strategyTester = new SimulationRunner(_candlesService, _tradeCalculatorService, _marketDetailsService, 
                     SimulationRunnerFlags.DoNotValidateStopsLimitsOrders | SimulationRunnerFlags.DoNotCacheM1Candles);
                 var earliest = !string.IsNullOrEmpty(StartDate) ? (DateTime?)DateTime.Parse(StartDate) : null;
                 var latest = !string.IsNullOrEmpty(EndDate) ? (DateTime?)DateTime.Parse(EndDate) : null;
-                var result = strategyTester.Run(d.Strategy, d.Market, broker, earliest, latest, updatePrices: UpdatePrices);
+                var result = strategyTester.Run(d.Strategy, d.Market, broker, earliest, latest, updatePrices: UpdatePrices, getShouldStopFunc: () => _stopRun);
 
                 if (result != null)
                 {
@@ -211,11 +235,11 @@ namespace AutomatedTraderDesigner.ViewModels
             Log.Info($"Simulation run completed in {stopwatch.Elapsed.TotalSeconds}s");
 
             // Save results
-            if (File.Exists(_savedResultsPath))
+            /*if (File.Exists(_savedResultsPath))
             {
                 File.Delete(_savedResultsPath);
             }
-            File.WriteAllText(_savedResultsPath, JsonConvert.SerializeObject(_results.Results));
+            File.WriteAllText(_savedResultsPath, JsonConvert.SerializeObject(_results.Results));*/
 
             _dispatcher.Invoke((Action)(() =>
             {
@@ -229,6 +253,7 @@ namespace AutomatedTraderDesigner.ViewModels
                 NotifyPropertyChanged("AverageLosingRRRTrades");
 
                 RunStrategyEnabled = true;
+                StopStrategyEnabled = false;
             }));
         }
 

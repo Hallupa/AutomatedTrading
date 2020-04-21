@@ -1,16 +1,17 @@
 ﻿using System.ComponentModel.Composition;
+using System.IO;
 using System.Reflection;
 using System.Windows;
-using Abt.Controls.SciChart.Visuals;
 using Hallupa.Library;
 using log4net;
+using log4net.Config;
 using TraderTools.Basics;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
 using TraderTools.Simulation;
 using TraderTools.Strategy;
 
-namespace AutomatedTraderDesigner
+namespace StrategyEditor
 {
     /// <summary>
     /// Interaction logic for App.xaml
@@ -23,6 +24,9 @@ namespace AutomatedTraderDesigner
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
             Log.Info("Starting application");
 
             DependencyContainer.AddAssembly(typeof(App).Assembly);

@@ -3,13 +3,12 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Windows;
+using AutomatedTraderDesigner.ViewModels;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
-using TraderTools.Core.Services;
-using MainWindowsViewModel = AutomatedTraderDesigner.ViewModels.MainWindowsViewModel;
 
-namespace AutomatedTraderDesigner
+namespace StrategyEditor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

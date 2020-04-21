@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.0.1" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Src\Library.UI\Library.UI.csproj" />
+    <ProjectReference Include="..\..\Common\Src\Library\Library.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Core\TraderTools.Core.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Strategy\TraderTools.Strategy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DefaultStrategy.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;C:\Program Files\Candleworks\ForexConnectAPIx64\bin\*.dll&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;copy &quot;C:\Program Files\Candleworks\ForexConnectAPIx64\bin\net\dotnet45\*.dll&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
+</Project>

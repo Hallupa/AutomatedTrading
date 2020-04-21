@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Keras.Models;
-using Numpy;
-using Numpy.Models;
+//using Keras.Models;
+//using Numpy;
+//using Numpy.Models;
 //using TraderTools.AI;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
@@ -27,7 +27,7 @@ namespace AutomatedTraderDesigner
 
         public override List<Trade> CreateNewTrades(
             MarketDetails market, TimeframeLookup<List<CandleAndIndicators>> candlesLookup,
-            List<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService, DateTime currentTime)
+            IEnumerable<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService, DateTime currentTime)
         {
             var candleAndIndicators = candlesLookup[Timeframe.H4];
             if (candleAndIndicators.Count < 20) return null;

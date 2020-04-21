@@ -7,6 +7,7 @@
       xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
       xmlns:views="clr-namespace:TraderTools.Core.UI.Views;assembly=TraderTools.Core.UI"
       xmlns:behaviours1="clr-namespace:Hallupa.Library.UI.Behaviours;assembly=Hallupa.Library.UI"
+      xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="StrategyCustomRunView">
@@ -23,9 +24,9 @@
         <ListBox Grid.Row="0" Grid.Column="0" ItemsSource="{Binding StrategyFilenames}" SelectedItem="{Binding SelectedStrategyFilename}"/>
 
         <avalonedit:TextEditor Grid.Row="0" Grid.Column="1" SyntaxHighlighting="C#" FontFamily="Consolas" FontSize="10pt" ShowLineNumbers="True">
-            <i:Interaction.Behaviors>
+            <b:Interaction.Behaviors>
                 <behaviours1:AvalonEditBehaviour Text="{Binding CodeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            </i:Interaction.Behaviors>
+            </b:Interaction.Behaviors>
         </avalonedit:TextEditor>
 
         <views:TradesResultsControl Grid.Row="1" Grid.ColumnSpan="2" DataContext="{Binding ResultsViewModel}"/>

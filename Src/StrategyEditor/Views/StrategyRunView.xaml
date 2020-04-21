@@ -6,8 +6,8 @@
         xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
         mc:Ignorable="d"
         Title="CommentsRunView"
-        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-        xmlns:behaviours="clr-namespace:Hallupa.Library.UI.Behaviours;assembly=Hallupa.Library.UI">
+        xmlns:behaviours="clr-namespace:Hallupa.Library.UI.Behaviours;assembly=Hallupa.Library.UI"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -28,9 +28,9 @@
 
             <Label Grid.Row="0">1. Choose strategy</Label>
             <ListBox Grid.Row="1" ItemsSource="{Binding Strategies}" DisplayMemberPath="Name" SelectionMode="Extended">
-                <i:Interaction.Behaviors>
+                <b:Interaction.Behaviors>
                     <behaviours:ListBoxSelectionBehavior SelectedItems="{Binding SelectedStrategies}" />
-                </i:Interaction.Behaviors>
+                </b:Interaction.Behaviors>
             </ListBox>
         </Grid>
 
@@ -42,14 +42,15 @@
 
             <Label Grid.Row="0">2. Choose market</Label>
             <ListBox Grid.Row="1" ItemsSource="{Binding Markets}" SelectionMode="Extended">
-                <i:Interaction.Behaviors>
+                <b:Interaction.Behaviors>
                     <behaviours:ListBoxSelectionBehavior SelectedItems="{Binding SelectedMarkets}" />
-                </i:Interaction.Behaviors>
+                </b:Interaction.Behaviors>
             </ListBox>
         </Grid>
 
         <Grid Grid.Row="3">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -60,6 +61,7 @@
                 <TextBox Width="100px" Text="{Binding EndDate}" VerticalContentAlignment="Center"/>
             </StackPanel>
             <Button Height="30px" Grid.Row="1" Command="{Binding RunStrategyCommand}" IsEnabled="{Binding RunStrategyEnabled}">Run strategy</Button>
+            <Button Height="30px" Grid.Row="2" Command="{Binding StopStrategyCommand}" IsEnabled="{Binding StopStrategyEnabled}">Stop</Button>
         </Grid>
     </Grid>
 </Page>

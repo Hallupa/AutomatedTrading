@@ -23,7 +23,7 @@ namespace AutomatedTraderDesigner
 
         public override List<Trade> CreateNewTrades(
             MarketDetails market, TimeframeLookup<List<CandleAndIndicators>> candlesLookup,
-            List<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService, DateTime currentTime)
+            IEnumerable<Trade> existingTrades, ITradeDetailsAutoCalculatorService calculatorService, DateTime currentTime)
         {
             if (_model == null) _model = LoadModel("TraderTest2");
 

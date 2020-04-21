@@ -91,14 +91,7 @@ namespace AutomatedTraderDesigner.ViewModels
                     Trades.Clear();
                 }
 
-                // Remove obsolete trades
-                for (var i = Trades.Count - 1; i >= 0; i--)
-                {
-                    if (!allTrades.Contains(Trades[i]))
-                    {
-                        Trades.RemoveAt(i);
-                    }
-                }
+                Trades.Clear();
 
                 // Add new trades
                 if (Trades.Count == 0)
