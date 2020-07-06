@@ -11,7 +11,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="2*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="7"/>
             <RowDefinition Height="1.5*"/>
         </Grid.RowDefinitions>
 
@@ -19,15 +19,23 @@
             <charting:DoubleChartView/>
         </Grid>
 
-        <Label Grid.Row="1">Results</Label>
+        <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Grid.Column="0" VerticalAlignment="Center" Height="7" Margin="1" />
 
-        <TabControl Grid.Row="2">
-            <TabItem Header="Trades">
-                <views1:TradeListControl/>
-            </TabItem>
-            <TabItem Header="Results">
-                <views1:TradesResultsControl DataContext="{Binding ResultsViewModel}"/>
-            </TabItem>
-        </TabControl>
+        <Grid Grid.Row =" 2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0">Results</Label>
+
+            <TabControl Grid.Row="1">
+                <TabItem Header="Trades">
+                    <views1:TradeListControl/>
+                </TabItem>
+                <TabItem Header="Results">
+                    <views1:TradesResultsControl DataContext="{Binding ResultsViewModel}"/>
+                </TabItem>
+            </TabControl>
+        </Grid>
     </Grid>
 </Page>

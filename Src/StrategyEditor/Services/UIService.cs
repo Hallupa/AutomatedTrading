@@ -15,10 +15,11 @@ namespace AutomatedTraderDesigner.Services
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class UIService : DependencyObject, INotifyPropertyChanged
     {
-        private DisplayPages _selectedDisplayPage = DisplayPages.RunStrategy;
+        private DisplayPages _selectedDisplayPage = DisplayPages.RunCustomStrategy;
         private Subject<UIService> _viewTradeObservable;
         private Subject<UIService> _viewTradeSetupObservable;
         private List<Action> _f5Actions = new List<Action>();
+        private List<Action> _cntrlSActions = new List<Action>();
 
         public UIService()
         {
@@ -98,6 +99,26 @@ namespace AutomatedTraderDesigner.Services
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void RegisterControlSAction(Action action, bool placeFirst = false)
+        {
+            if (placeFirst)
+            {
+                _cntrlSActions.Insert(0, action);
+            }
+            else
+            {
+                _cntrlSActions.Add(action);
+            }
+        }
+
+        public void RaiseControlSPressed()
+        {
+            foreach (var action in _cntrlSActions)
+            {
+                action();
+            }
         }
     }
 }

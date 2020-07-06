@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using AutomatedTraderDesigner.ViewModels;
 using Hallupa.Library;

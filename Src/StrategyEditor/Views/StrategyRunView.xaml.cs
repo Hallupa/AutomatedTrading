@@ -12,12 +12,7 @@ namespace AutomatedTraderDesigner.Views
         {
             InitializeComponent();
 
-            ViewModel = new StrategyRunViewModel();
-
-            DataContext = ViewModel;
-
+            DataContext = new StrategyRunViewModel();
         }
-
-        public StrategyRunViewModel ViewModel { get; }
     }
 }
