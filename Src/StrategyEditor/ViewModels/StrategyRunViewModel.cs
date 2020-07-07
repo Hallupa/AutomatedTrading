@@ -253,10 +253,10 @@ namespace AutomatedTraderDesigner.ViewModels
                             d.Market); //, _tradeCalculatorService, _marketDetailsService,
                     //_tradeCache,
                     //SimulationRunnerFlags.DoNotValidateStopsLimitsOrders);
-                    var strategy = (StrategyBase2)Activator.CreateInstance(d.StrategyType);
+                    var strategy = (StrategyBase)Activator.CreateInstance(d.StrategyType);
                     if (strategy != null && strategy.Markets == null)
                     {
-                        strategy.SetMarkets(StrategyBase2.Majors.Concat(StrategyBase2.Minors).Concat(StrategyBase2.MajorIndices).ToArray());
+                        strategy.SetMarkets(StrategyBase.Majors.Concat(StrategyBase.Minors).Concat(StrategyBase.MajorIndices).ToArray());
                     }
 
                     var result = strategyTester.Run(strategy, getShouldStopFunc: () => _stopRun, strategy.StartTime,
@@ -280,11 +280,11 @@ namespace AutomatedTraderDesigner.ViewModels
                 });
 
                 var expectedTrades = new List<ExpectedTradeAttribute>();
-                var strategy = (StrategyBase2)Activator.CreateInstance(_strategyType);
+                var strategy = (StrategyBase)Activator.CreateInstance(_strategyType);
 
                 if (strategy != null && strategy.Markets == null)
                 {
-                    strategy.SetMarkets(StrategyBase2.Majors.Concat(StrategyBase2.Minors).Concat(StrategyBase2.MajorIndices).ToArray());
+                    strategy.SetMarkets(StrategyBase.Majors.Concat(StrategyBase.Minors).Concat(StrategyBase.MajorIndices).ToArray());
                 }
 
                 foreach (var market in strategy.Markets)
