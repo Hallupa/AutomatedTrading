@@ -1,0 +1,14 @@
+﻿<Window x:Class="StrategyRunnerLive.Views.ProgressView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StrategyRunnerLive.Views"
+        xmlns:behaviours="clr-namespace:Hallupa.Library.UI.Behaviours;assembly=Hallupa.Library.UI"
+        mc:Ignorable="d"
+        Title="Working..." Height="100" Width="300" WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow" ResizeMode="NoResize"
+        behaviours:WindowBehaviour.HideCloseButton="True">
+    <Grid>
+        <TextBlock Name="TextToShow" HorizontalAlignment="Center" VerticalAlignment="Center">Test</TextBlock>
+    </Grid>
+</Window>

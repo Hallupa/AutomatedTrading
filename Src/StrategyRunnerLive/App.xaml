@@ -1,7 +1,7 @@
-﻿<Application x:Class="AutomatedTrader.App"
+﻿<Application x:Class="StrategyRunnerLive.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:AutomatedTrader"
+             xmlns:local="clr-namespace:StrategyRunnerLive"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

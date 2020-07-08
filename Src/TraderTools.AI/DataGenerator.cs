@@ -36,9 +36,9 @@ namespace TraderTools.AI
             CreateData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles, out imgWidth, out imgHeight, out imgArray);
         }*/
 
-        public void CreateRawData(string market, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles, out float[] rawData)
+        public void CreateRawData(string market, Timeframe timeframe, ModelDataType modelDataType, DateTime dateTime, int numberOfCandles, out float[] rawData)
         {
-            var candlesWithIndicators = GetCandlesWithIndicators(market, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 }, dateTime);
+            var candlesWithIndicators = GetCandlesWithIndicators(market, timeframe, new[] { Indicator.EMA8, Indicator.EMA25, Indicator.EMA50 }, dateTime);
 
             CreateRawData(candlesWithIndicators, candlesWithIndicators.Count - 1, modelDataType, numberOfCandles, out rawData);
         }
@@ -202,6 +202,8 @@ namespace TraderTools.AI
             var dpNum = 0;
 
             var modelDirectory = GetModelDirectory(model, _dataDirectoryService);
+            if (!Directory.Exists(modelDirectory)) Directory.CreateDirectory(modelDirectory);
+
             Directory.GetFiles(modelDirectory, "*.*", SearchOption.TopDirectoryOnly).ToList().ForEach(File.Delete);
 
             for (var dpIndex = 1; dpIndex < model.DataPoints.Count; dpIndex++)
@@ -210,7 +212,7 @@ namespace TraderTools.AI
                 dpNum++;
 
                 // CreateData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var imgWidth, out var imgHeight, out var imgArray);
-                CreateRawData(dp.Market, model.ModelDataType, dp.DateTime, model.InputsCount, out var rawData);
+                CreateRawData(dp.Market,  model.Timeframe, model.ModelDataType, dp.DateTime, model.InputsCount, out var rawData);
 
                 var path = Path.Combine(modelDirectory, $"{dp.Label}_{dpNum}.png");
                 // SaveImage(path, imgArray, imgWidth, imgHeight);
@@ -330,9 +332,9 @@ namespace TraderTools.AI
             }
         }
 
-        public List<CandleAndIndicators> GetCandlesWithIndicators(string market, Indicator[] indicators, DateTime? dateTime = null)
+        public List<CandleAndIndicators> GetCandlesWithIndicators(string market, Timeframe timeframe, Indicator[] indicators, DateTime? dateTime = null)
         {
-            var candles = _candlesService.GetCandles(_broker, market, Timeframe.D1, false, null, maxCloseTimeUtc: dateTime);
+            var candles = _candlesService.GetCandles(_broker, market, timeframe, false, null, maxCloseTimeUtc: dateTime);
 
             var ret = new List<CandleAndIndicators>();
             var maxIndicators = indicators.Select(x => (int)x).Max() + 1;

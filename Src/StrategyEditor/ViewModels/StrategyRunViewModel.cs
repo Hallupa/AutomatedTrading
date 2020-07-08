@@ -22,7 +22,6 @@ using TraderTools.Basics.Extensions;
 using TraderTools.Core.Trading;
 using TraderTools.Core.UI.ViewModels;
 using TraderTools.Simulation;
-using TraderTools.Strategy;
 
 namespace AutomatedTraderDesigner.ViewModels
 {
@@ -249,7 +248,7 @@ namespace AutomatedTraderDesigner.ViewModels
                 {
                     if (_stopRun) return ProducerConsumerActionResult.Stop;
                     var strategyTester =
-                        new StrategyRunner2(_candlesService, _marketDetailsService, _broker,
+                        new StrategyRunner(_candlesService, _marketDetailsService, _broker,
                             d.Market); //, _tradeCalculatorService, _marketDetailsService,
                     //_tradeCache,
                     //SimulationRunnerFlags.DoNotValidateStopsLimitsOrders);
@@ -637,7 +636,7 @@ namespace AutomatedTraderDesigner.ViewModels
             }
         }
 
-        private static void UpdateData(CandleAndIndicators c, List<float> prices, List<float> spread, List<float> emas,
+       /* private static void UpdateData(CandleAndIndicators c, List<float> prices, List<float> spread, List<float> emas,
             List<float> t3, List<float> ao, ref float? t3Min, ref float? t3Max, ref float? aoMin, ref float? aoMax)
         {
             // Update prices and spread
@@ -762,6 +761,6 @@ namespace AutomatedTraderDesigner.ViewModels
             {
                 str.Append(trade != null ? $",{trade.RMultiple:0.0000}" : ",");
             }
-        }
+        }*/
     }
 }
