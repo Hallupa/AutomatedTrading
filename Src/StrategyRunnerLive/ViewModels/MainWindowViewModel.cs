@@ -1,11 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
+using TraderTools.Core.Services;
 
 namespace StrategyRunnerLive.ViewModels
 {
@@ -17,6 +19,7 @@ namespace StrategyRunnerLive.ViewModels
 
         [Import] private IBrokersService _brokersService;
         [Import] private IDataDirectoryService _dataDirectoryService;
+
         private string _selectedStrategyFilename;
 
         public MainWindowViewModel()
@@ -24,20 +27,23 @@ namespace StrategyRunnerLive.ViewModels
             Log.Info("Application started");
 
             DependencyContainer.ComposeParts(this);
-            
+
             _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
 
             // Setup brokers
             var brokers = new IBroker[]
             {
-                _fxcm = new FxcmBroker()
+                _fxcm = new FxcmBroker
+                {
+                    IncludeReportInUpdates = false
+                }
             };
 
             _brokersService.AddBrokers(brokers);
 
-            LoginOutViewModel = new LoginOutViewModel();
-
             RunStrategyLiveViewModel = new RunStrategyLiveViewModel();
+
+            LoginOutViewModel = new LoginOutViewModel();
 
             RefreshStrategyFilenames();
         }
