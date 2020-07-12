@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using TraderTools.Basics;
 
-namespace AutomatedTraderDesigner.Services
+namespace StrategyEditor.Services
 {
     [Export(typeof(StrategyRunnerResultsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]

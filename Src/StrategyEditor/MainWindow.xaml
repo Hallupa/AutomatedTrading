@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StrategyEditor"
         xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
-        xmlns:viewModels1="clr-namespace:AutomatedTraderDesigner.ViewModels"
+        xmlns:viewModels1="clr-namespace:StrategyEditor.ViewModels"
         xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
         xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
         mc:Ignorable="d"

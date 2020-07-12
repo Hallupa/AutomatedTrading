@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
-using AutomatedTraderDesigner.Services;
+using StrategyEditor.Services;
 using Hallupa.Library;
 using Hallupa.Library.UI.Views;
 using log4net;
@@ -23,7 +23,7 @@ using TraderTools.Core.Trading;
 using TraderTools.Core.UI.ViewModels;
 using TraderTools.Simulation;
 
-namespace AutomatedTraderDesigner.ViewModels
+namespace StrategyEditor.ViewModels
 {
     public class StrategyRunViewModel : INotifyPropertyChanged
     {

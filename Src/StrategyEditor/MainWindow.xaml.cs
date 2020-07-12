@@ -4,7 +4,7 @@ using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using AutomatedTraderDesigner.ViewModels;
+using StrategyEditor.ViewModels;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;

@@ -6,10 +6,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using AutomatedTraderDesigner.ViewModels;
+using StrategyEditor.ViewModels;
 using Hallupa.Library;
 
-namespace AutomatedTraderDesigner.Services
+namespace StrategyEditor.Services
 {
     [Export(typeof(UIService))]
     [PartCreationPolicy(CreationPolicy.Shared)]

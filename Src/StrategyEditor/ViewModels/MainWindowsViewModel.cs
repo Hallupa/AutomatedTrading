@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using AutomatedTraderDesigner.Services;
+using StrategyEditor.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
@@ -17,7 +17,7 @@ using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
 using Dispatcher = System.Windows.Threading.Dispatcher;
 
-namespace AutomatedTraderDesigner.ViewModels
+namespace StrategyEditor.ViewModels
 {
     public enum DisplayPages
     {

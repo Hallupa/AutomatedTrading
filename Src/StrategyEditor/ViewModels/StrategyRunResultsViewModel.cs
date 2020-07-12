@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using AutomatedTraderDesigner.Services;
+using StrategyEditor.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Core.UI.ViewModels;
 
-namespace AutomatedTraderDesigner.ViewModels
+namespace StrategyEditor.ViewModels
 {
     public class StrategyRunResultsViewModel : TradeViewModelBase
     {

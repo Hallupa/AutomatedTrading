@@ -4,7 +4,7 @@ using System.Linq;
 using TraderTools.Basics;
 using TraderTools.Simulation;
 
-namespace AutomatedTraderDesigner
+namespace StrategyEditor
 {
     public class DefaultStrategy : StrategyBase
     {
