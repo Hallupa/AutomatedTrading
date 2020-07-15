@@ -18,7 +18,6 @@ using Hallupa.Library;
 using Hallupa.Library.UI.Views;
 using log4net;
 using TraderTools.Basics;
-using TraderTools.Basics.Extensions;
 using TraderTools.Core.Trading;
 using TraderTools.Core.UI.ViewModels;
 using TraderTools.Simulation;
@@ -206,7 +205,7 @@ namespace StrategyEditor.ViewModels
                     _strategyHash = hash;
                     Log.Info("Compiling strategy");
 
-                    _strategyType = StrategyHelper.CompileStrategy2(code);
+                    _strategyType = StrategyHelper.CompileStrategy(code);
                     Log.Info("Compilation complete");
                 }
 
@@ -255,15 +254,12 @@ namespace StrategyEditor.ViewModels
                     var strategy = (StrategyBase)Activator.CreateInstance(d.StrategyType);
                     if (strategy != null && strategy.Markets == null)
                     {
-                        strategy.SetMarkets(StrategyBase.Majors.Concat(StrategyBase.Minors).Concat(StrategyBase.MajorIndices).ToArray());
+                        strategy.SetMarkets(StrategyBase.GetDefaultMarkets());
                     }
 
-                    var result = strategyTester.Run(strategy, getShouldStopFunc: () => _stopRun, strategy.StartTime,
-                        strategy.EndTime);
-                    // tradesCompletedProgressFunc: tradesProgress =>
-                    //{
-                    //_results.AddResult(tradesProgress);
-                    // });
+                    var result = strategyTester.Run(strategy, getShouldStopFunc: () => _stopRun, strategy.StartTime, strategy.EndTime);
+
+
 
                     if (result != null)
                     {
@@ -283,7 +279,7 @@ namespace StrategyEditor.ViewModels
 
                 if (strategy != null && strategy.Markets == null)
                 {
-                    strategy.SetMarkets(StrategyBase.Majors.Concat(StrategyBase.Minors).Concat(StrategyBase.MajorIndices).ToArray());
+                    strategy.SetMarkets(StrategyBase.GetDefaultMarkets());
                 }
 
                 foreach (var market in strategy.Markets)
@@ -313,11 +309,23 @@ namespace StrategyEditor.ViewModels
                 _producerConsumer.SetProducerCompleted();
                 _producerConsumer.WaitUntilConsumersFinished();
 
+                var trades = _results.Results.ToList();
+
+                // Set trade profits
+                var balance = 10000M;
+                foreach (var t in trades.OrderBy(z => z.OrderDateTime ?? z.EntryDateTime))
+                {
+                    var riskAmount = (strategy.RiskEquityPercent / 100M) * balance;
+                    var profit = t.RMultiple * riskAmount ?? 0M;
+                    t.NetProfitLoss = profit;
+                    t.RiskAmount = riskAmount;
+                    balance += profit;
+
+                    if (balance < 0) balance = 0M;
+                }
 
                 stopwatch.Stop();
                 Log.Info($"Simulation run completed in {stopwatch.Elapsed.TotalSeconds}s");
-
-                var trades = _results.Results.ToList();
 
                 var matches = 0;
                 foreach (var expectedTrade in expectedTrades.ToList())
@@ -442,6 +450,8 @@ namespace StrategyEditor.ViewModels
                 {
                     CodeText = string.Empty;
                 }
+
+                _uiService.SelectedStrategyFilename = _selectedStrategyFilename;
             }
         }
 
@@ -471,8 +481,9 @@ namespace StrategyEditor.ViewModels
             set
             {
                 _codeText = value;
-                //StrategyRunViewModel.CustomCode = _codeText;
                 OnPropertyChanged();
+
+                _uiService.SelectedCodeText = CodeText;
             }
         }
 

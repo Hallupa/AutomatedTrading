@@ -31,6 +31,8 @@ namespace StrategyEditor.Services
 
         public DelegateCommand ViewTradeSetupCommand { get; private set; }
 
+        public string SelectedStrategyFilename { get; set; }
+
         public static readonly DependencyProperty IsViewTradeEnabledProperty = DependencyProperty.Register(
             "IsViewTradeEnabled", typeof(bool), typeof(UIService), new PropertyMetadata(true));
 
@@ -80,9 +82,12 @@ namespace StrategyEditor.Services
         private Subject<UIService> ViewTradeSubject => _viewTradeObservable ?? (_viewTradeObservable = new Subject<UIService>());
 
         public IObservable<UIService> ViewTradeObservable => ViewTradeSubject.AsObservable();
+
         private Subject<UIService> ViewTradeSetupSubject => _viewTradeSetupObservable ?? (_viewTradeSetupObservable = new Subject<UIService>());
 
         public IObservable<UIService> ViewTradeSetupObservable => ViewTradeSetupSubject.AsObservable();
+
+        public string SelectedCodeText { get; set; }
 
         private void ViewTradeSetup()
         {
