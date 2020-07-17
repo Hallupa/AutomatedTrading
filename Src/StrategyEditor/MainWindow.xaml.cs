@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using StrategyEditor.ViewModels;
 using Hallupa.Library;

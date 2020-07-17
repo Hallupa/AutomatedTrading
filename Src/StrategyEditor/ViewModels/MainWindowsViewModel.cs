@@ -10,11 +10,13 @@ using System.Windows.Input;
 using StrategyEditor.Services;
 using Hallupa.Library;
 using log4net;
+using StrategyEditor.Views;
 using TraderTools.Basics;
 using TraderTools.Basics.Helpers;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
+using TraderTools.Simulation;
 using Dispatcher = System.Windows.Threading.Dispatcher;
 
 namespace StrategyEditor.ViewModels
@@ -22,7 +24,8 @@ namespace StrategyEditor.ViewModels
     public enum DisplayPages
     {
         RunCustomStrategy,
-        RunStrategyResults
+        RunStrategyResults,
+        RunStrategyResultsChart
     }
 
     public class MainWindowsViewModel : INotifyPropertyChanged
@@ -35,9 +38,9 @@ namespace StrategyEditor.ViewModels
         [Import] private MarketsService _marketsService;
         [Import] private IMarketDetailsService _marketDetailsService;
         [Import] private UIService _uiService;
-        private bool _updatingCandles;
-
         [Import] public UIService UIService { get; private set; }
+        private bool _updatingCandles;
+        private Dispatcher _dispatcher;
 
         #endregion
 
@@ -45,6 +48,8 @@ namespace StrategyEditor.ViewModels
         public MainWindowsViewModel()
         {
             DependencyContainer.ComposeParts(this);
+
+            _dispatcher = Dispatcher.CurrentDispatcher;
 
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
 
@@ -58,7 +63,10 @@ namespace StrategyEditor.ViewModels
             _brokersService.AddBrokers(brokers);
 
             EventManager.RegisterClassHandler(typeof(Window), Keyboard.KeyDownEvent, new KeyEventHandler(UIElement_OnPreviewKeyDown), true);
+            LoginOutViewModel = new LoginOutViewModel();
         }
+
+        public LoginOutViewModel LoginOutViewModel { get; private set; }
 
         private void UIElement_OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
@@ -75,21 +83,66 @@ namespace StrategyEditor.ViewModels
         private void UpdateFXCandles(object obj)
         {
             if (_updatingCandles) return;
+            if (string.IsNullOrEmpty(_uiService.SelectedStrategyFilename))
+            {
+                MessageBox.Show("Select strategy to update candles");
+                return;
+            }
+
+            var strategyType = StrategyHelper.CompileStrategy(_uiService.SelectedCodeText);
+            if (strategyType == null)
+            {
+                MessageBox.Show("Unable to compile strategy");
+                return;
+            }
+
+            var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
+
             _updatingCandles = true;
             var dispatcher = Dispatcher.CurrentDispatcher;
             var fxcm = _brokersService.Brokers.First(x => x.Name == "FXCM");
+            var timeframes = strategy.Timeframes.Union(new[] { Timeframe.M1 }).ToArray();
+            var markets = strategy.Markets;
 
-            ((FxcmBroker)fxcm).SetUsernamePassword("", "", "GBREAL");
-            fxcm.Connect();
+            if (markets == null)
+            {
+                markets = StrategyBase.GetDefaultMarkets();
+            }
+
+            var view = new ProgressView { Owner = Application.Current.MainWindow };
+            view.TextToShow.Text = "Updating candles";
 
             Task.Run(() =>
             {
-                CandlesHelper.UpdateCandles(
-                    fxcm, _candleService, _marketDetailsService.GetAllMarketDetails().Select(x => x.Name), 
-                    new[] { Timeframe.D1, Timeframe.H8, Timeframe.H4, Timeframe.H2, Timeframe.H1, Timeframe.M1, Timeframe.M15 });
+                try
+                {
+                    CandlesHelper.UpdateCandles(
+                        fxcm,
+                        _candleService,
+                        markets,
+                        timeframes,
+                        updateProgressAction: s =>
+                        {
+                            _dispatcher.BeginInvoke((Action)(() =>
+                           {
+                               view.TextToShow.Text = s;
+                           }));
+                        });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Unable to update candles", ex);
+                }
 
-                dispatcher.Invoke(() => { _updatingCandles = false; });
+                dispatcher.Invoke(() =>
+                {
+                    view.Close();
+                    MessageBox.Show("Updating candles complete");
+                    _updatingCandles = false;
+                });
             });
+
+            view.ShowDialog();
         }
 
         #endregion

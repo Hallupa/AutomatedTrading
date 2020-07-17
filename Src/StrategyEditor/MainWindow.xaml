@@ -33,6 +33,7 @@
                 <RibbonGroup Header="Pages">
                     <RibbonToggleButton Label="Strategy" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=TwoWay}"/>
                     <RibbonToggleButton Label="Results" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResults}, Mode=TwoWay}"/>
+                    <RibbonToggleButton Label="Results chart" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResultsChart}, Mode=TwoWay}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="Strategies" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=OneWay}">
@@ -53,6 +54,7 @@
 
             <RibbonTab Header="Candles">
                 <RibbonGroup Header="FX">
+                    <RibbonButton Label="{Binding LoginOutViewModel.LoginOutButtonText}" Command="{Binding LoginOutViewModel.LoginOutCommand}"/>
                     <RibbonButton Label="Update candles" Command="{Binding UpdateFXCandlesCommand}"/>
                 </RibbonGroup>
             </RibbonTab>
@@ -62,8 +64,8 @@
 
         <Grid Grid.Row="1">
             <Frame Source="Views/StrategyRunResultsView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResults}, Mode=OneWay}"/>
-            <Frame x:Name="StrategyRunView" Source="Views/StrategyRunView.xaml"
-                   Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=OneWay}"/>
+            <Frame Source="Views/StrategyRunResultsChartView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategyResultsChart}, Mode=OneWay}"/>
+            <Frame x:Name="StrategyRunView" Source="Views/StrategyRunView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.RunCustomStrategy}, Mode=OneWay}"/>
         </Grid>
 
         <ui:LogControl Grid.Row="2" ShowExpanded="True"/>

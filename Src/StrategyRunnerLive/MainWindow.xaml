@@ -11,7 +11,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Ribbon x:Name="RibbonWin" Grid.Row="0" SelectedIndex="0">
@@ -36,6 +35,6 @@
             </RibbonTab>
         </Ribbon>
 
-        <ui:LogControl Grid.Row="2" ShowExpanded="True"/>
+        <ui:LogControl Grid.Row="1" ShowExpanded="True" ShowToggleButton="False" LogRowHeight="*"/>
     </Grid>
 </Window>

@@ -20,6 +20,7 @@ namespace StrategyEditor.ViewModels
         [Import] public UIService _uiService;
         private Dispatcher _dispatcher;
         private IDisposable _testResultsUpdatedObserver;
+        private IDisposable _testResultsStartedObserver;
 
         public StrategyRunResultsViewModel()
         {
@@ -54,7 +55,7 @@ namespace StrategyEditor.ViewModels
                     }
                 });
 
-            _testResultsUpdatedObserver = _results.TestRunStarted.Subscribe(newResults =>
+            _testResultsStartedObserver = _results.TestRunStarted.Subscribe(newResults =>
             {
                 UpdateTrades();
                 ResultsViewModel.UpdateResults();

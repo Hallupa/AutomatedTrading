@@ -20,6 +20,8 @@ namespace StrategyEditor
             AddMajors();
             AddMinors();
             AddMajorIndices();
+
+            SetRiskEquityPercent(0.2M);
         }
 
         public override void ProcessCandles(List<Timeframe> newCandleTimeframes)

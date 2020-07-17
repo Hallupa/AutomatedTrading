@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace StrategyRunnerLive.Views
+namespace StrategyEditor.Views
 {
     /// <summary>
     /// Interaction logic for ProgressView.xaml
