@@ -24,12 +24,9 @@ namespace StrategyEditor.Services
         public UIService()
         {
             ViewTradeCommand = new DelegateCommand(o => ViewTrade());
-            ViewTradeSetupCommand = new DelegateCommand(o => ViewTradeSetup());
         }
 
         public DelegateCommand ViewTradeCommand { get; private set; }
-
-        public DelegateCommand ViewTradeSetupCommand { get; private set; }
 
         public string SelectedStrategyFilename { get; set; }
 

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Hallupa.Library;
 using StrategyEditor.Services;
@@ -18,9 +20,11 @@ namespace StrategyEditor.ViewModels
         [Import] private IBrokersService _brokerService;
         private IDisposable _testResultsStartedObserver;
         private IDisposable _testResultsUpdatedObserver;
+        private Dispatcher _dispatcher;
 
         public StrategyRunResultsChartViewModel()
         {
+            _dispatcher = Dispatcher.CurrentDispatcher;
             DependencyContainer.ComposeParts(this);
 
             _testResultsStartedObserver = _results.TestRunStarted.Subscribe(UpdateChartData);
@@ -32,46 +36,55 @@ namespace StrategyEditor.ViewModels
         private void UpdateChartData(List<Trade> trades)
         {
             Series.Clear();
-            var xvalues = new List<DateTime>();
-            var yvalues = new List<double>();
 
-            var startedTrades = trades.Where(t => t.EntryDateTime != null).ToList();
-
-            if (startedTrades.Count > 0)
+            Task.Run(() =>
             {
-                var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
-                var latest = DateTime.UtcNow;
-                var broker = _brokerService.GetBroker("FXCM");
+                var xvalues = new List<DateTime>();
+                var yvalues = new List<double>();
 
-                for (var date = earliest; date <= latest; date = date.AddDays(1))
+                var startedTrades = trades.Where(t => t.EntryDateTime != null).ToList();
+
+                if (startedTrades.Count > 0)
                 {
-                    var balance = 10000M;
-                    var currentTrades = trades.Where(t => t.EntryDateTime <= date).ToList();
-                    foreach (var t in currentTrades)
+                    var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
+                    var latest = DateTime.UtcNow;
+                    var broker = _brokerService.GetBroker("FXCM");
+
+                    for (var date = earliest; date <= latest; date = date.AddDays(1))
                     {
-                        if (date >= t.CloseDateTime)
+                        var balance = 10000M;
+                        var currentTrades = trades.Where(t => t.EntryDateTime <= date).ToList();
+                        foreach (var t in currentTrades)
                         {
-                            balance += (decimal)t.Profit.Value;
-                        }
-                        else
-                        {
-                            var risk = t.RiskAmount.Value;
-                            var candle = _brokersCandlesService.GetLastClosedCandle(t.Market, broker, Timeframe.D1, date, false);
-                            var price = (decimal)(t.TradeDirection == TradeDirection.Long
+                            if (date >= t.CloseDateTime)
+                            {
+                                balance += (decimal)t.Profit.Value;
+                            }
+                            else
+                            {
+                                var risk = t.RiskAmount.Value;
+                                var candle =
+                                    _brokersCandlesService.GetLastClosedCandle(t.Market, broker, Timeframe.D1, date,
+                                        false);
+                                var price = (decimal)(t.TradeDirection == TradeDirection.Long
                                     ? candle.Value.CloseBid
                                     : candle.Value.CloseAsk);
-                            var stopDist = t.InitialStop.Value - t.EntryPrice;
-                            var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;
-                            balance += (decimal)profit;
+                                var stopDist = t.InitialStop.Value - t.EntryPrice;
+                                var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;
+                                balance += (decimal)profit;
+                            }
                         }
+
+                        xvalues.Add(date);
+                        yvalues.Add((double)balance);
                     }
-
-                    xvalues.Add(date);
-                    yvalues.Add((double)balance);
                 }
-            }
 
-            ((XyDataSeries<DateTime, double>)Series).Append(xvalues, yvalues);
+                _dispatcher.Invoke(() =>
+                {
+                    ((XyDataSeries<DateTime, double>)Series).Append(xvalues, yvalues);
+                });
+            });
         }
 
         public static readonly DependencyProperty SeriesProperty = DependencyProperty.Register(

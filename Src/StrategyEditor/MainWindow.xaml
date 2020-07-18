@@ -27,7 +27,6 @@
             <RibbonTab Header="Page">
                 <RibbonGroup Header="Trades">
                     <RibbonButton Label="View trade" Command="{Binding UIService.ViewTradeCommand}" IsEnabled="{Binding UIService.IsViewTradeEnabled}"/>
-                    <RibbonButton Label="View trade setup" Command="{Binding UIService.ViewTradeSetupCommand}" IsEnabled="{Binding UIService.IsViewTradeEnabled}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="Pages">
