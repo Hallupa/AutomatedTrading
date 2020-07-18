@@ -21,8 +21,9 @@ Any feedback or ideas are welcome!
 
 ## Strategy editor screen
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EditStrategy.png)
-On the right shows a strategy for placing random trades. Coding strategies has been designed to be as simple as possible as shown in the screenshot.
-The log shows just how fast a strategy can run - 33 markets run in 35 seconds creating 105k trades over the 10 years of data.
+On the right is the strategy editor section - this shows a strategy created for placing random trades.
+Coding strategies has been designed to be as simple as possible as shown in the screenshot.
+The log at the bottom of the screenshot demonstrates  just how fast a strategy can run - 33 markets run in 35 seconds creating 105k trades over the 10 years of data.
 
 ## Trade chart
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/TradeChart.png)
