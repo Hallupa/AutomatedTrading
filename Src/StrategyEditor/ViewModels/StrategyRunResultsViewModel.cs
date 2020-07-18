@@ -1,18 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Media;
 using System.Windows.Threading;
 using StrategyEditor.Services;
 using Hallupa.Library;
 using log4net;
 using TraderTools.Basics;
+using TraderTools.Core.UI;
 using TraderTools.Core.UI.ViewModels;
+using TraderTools.Indicators;
 
 namespace StrategyEditor.ViewModels
 {
-    public class StrategyRunResultsViewModel : TradeViewModelBase
+    public class StrategyRunResultsViewModel
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         [Import] private StrategyRunnerResultsService _results;
@@ -25,26 +29,32 @@ namespace StrategyEditor.ViewModels
         public StrategyRunResultsViewModel()
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
-            LargeChartTimeframe = Timeframe.H4;
+            ChartViewModel = new ChartViewModel();
+            TradesViewModel = new TradeListViewModel();
+            ChartViewModel.ChartTimeframe = Timeframe.H4;
 
             DependencyContainer.ComposeParts(this);
-            Broker = _brokersService.Brokers.First(x => x.Name == "FXCM");
 
             _uiService.ViewTradeObservable.Subscribe(o =>
             {
-                if (SelectedTrade == null) return;
+                if (TradesViewModel.SelectedTrade == null) return;
 
-                if (SelectedTrade.Timeframe != null)
+                if (TradesViewModel.SelectedTrade.Timeframe != null)
                 {
-                    LargeChartTimeframe = SelectedTrade.Timeframe.Value;
+                    ChartViewModel.ChartTimeframe = TradesViewModel.SelectedTrade.Timeframe.Value;
                 }
 
-                ViewTrade(SelectedTrade, false);
-            });
-
-            _uiService.ViewTradeSetupObservable.Subscribe(o =>
-            {
-                ViewTradeSetup(SelectedTrade);
+                ChartViewModel.ShowTrade(TradesViewModel.SelectedTrade,
+                    TradesViewModel.SelectedTrade.Timeframe ?? Timeframe.H2, false,
+                    s => { },
+                    new List<(IIndicator Indicator, Color Color, bool ShowInLegend)>()
+                    {
+                        (new ExponentialMovingAverage(8), Colors.DarkBlue, true),
+                        (new ExponentialMovingAverage(25), Colors.Blue, true),
+                        (new ExponentialMovingAverage(50), Colors.Blue, true),
+                        (new BollingerBand(1.5F, 20), Colors.Green, true),
+                        (new BollingerBand(-1.5F, 20), Colors.Green, false)
+                    });
             });
 
             ResultsViewModel = new TradesResultsViewModel(() =>
@@ -75,13 +85,17 @@ namespace StrategyEditor.ViewModels
                 Log.Info("Updated strategy run results");
             });
 
-            ShowClosedTrades = true;
-            ShowOpenTrades = true;
-            ShowOrders = true;
+            TradesViewModel.ShowClosedTrades = true;
+            TradesViewModel.ShowOpenTrades = true;
+            TradesViewModel.ShowOrders = true;
         }
 
-        public TradesResultsViewModel ResultsViewModel { get; }
+        public TradeListViewModel TradesViewModel { get; set; }
 
+        public ChartViewModel ChartViewModel { get; set; }
+
+        public TradesResultsViewModel ResultsViewModel { get; }
+        
         private void UpdateTrades()
         {
             var allTrades = _results.Results.OrderByDescending(x => x.OrderDateTime ?? x.EntryDateTime).ToList();
@@ -91,35 +105,35 @@ namespace StrategyEditor.ViewModels
                 // Clear trades in a single operation to speed it up
                 if (allTrades.Count == 0)
                 {
-                    Trades.Clear();
+                    TradesViewModel.Trades.Clear();
                 }
 
-                Trades.Clear();
+                TradesViewModel.Trades.Clear();
 
                 // Add new trades
-                if (Trades.Count == 0)
+                if (TradesViewModel.Trades.Count == 0)
                 {
-                    Trades.AddRange(allTrades);
+                    TradesViewModel.Trades.AddRange(allTrades);
                 }
                 else
                 {
                     for (var i = 0; i < allTrades.Count; i++)
                     {
                         var trade = allTrades[i];
-                        if (i >= Trades.Count)
+                        if (i >= TradesViewModel.Trades.Count)
                         {
-                            Trades.Add(trade);
+                            TradesViewModel.Trades.Add(trade);
                         }
-                        else if (trade != Trades[i])
+                        else if (trade != TradesViewModel.Trades[i])
                         {
-                            var existingIndex = Trades.IndexOf(trade);
+                            var existingIndex = TradesViewModel.Trades.IndexOf(trade);
                             if (existingIndex != -1)
                             {
-                                Trades.Move(existingIndex, i);
+                                TradesViewModel.Trades.Move(existingIndex, i);
                             }
                             else
                             {
-                                Trades.Insert(i, trade);
+                                TradesViewModel.Trades.Insert(i, trade);
                             }
                         }
                     }

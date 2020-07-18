@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Column="0" Grid.Row="0">
-            <charting:DoubleChartView/>
+            <views1:ChartView DataContext="{Binding ChartViewModel}"/>
         </Grid>
 
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Grid.Column="0" VerticalAlignment="Center" Height="7" Margin="1" />
@@ -30,7 +30,7 @@
 
             <TabControl Grid.Row="1">
                 <TabItem Header="Trades">
-                    <views1:TradeListControl/>
+                    <views1:TradeListControl DataContext="{Binding TradesViewModel}"/>
                 </TabItem>
                 <TabItem Header="Results">
                     <views1:TradesResultsControl DataContext="{Binding ResultsViewModel}"/>

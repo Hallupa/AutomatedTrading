@@ -83,16 +83,7 @@ namespace StrategyEditor.Services
 
         public IObservable<UIService> ViewTradeObservable => ViewTradeSubject.AsObservable();
 
-        private Subject<UIService> ViewTradeSetupSubject => _viewTradeSetupObservable ?? (_viewTradeSetupObservable = new Subject<UIService>());
-
-        public IObservable<UIService> ViewTradeSetupObservable => ViewTradeSetupSubject.AsObservable();
-
         public string SelectedCodeText { get; set; }
-
-        private void ViewTradeSetup()
-        {
-            ViewTradeSetupSubject.OnNext(this);
-        }
 
         private void ViewTrade()
         {
