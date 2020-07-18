@@ -19,8 +19,14 @@ From the project aims, I have everything above 1-9 done in a basic form. Below a
 
 Any feedback or ideas are welcome!
 
+## Strategy editor screen
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EditStrategy.png)
+On the right shows a strategy for placing random trades. Coding strategies has been designed to be as simple as possible as shown in the screenshot.
 
+## Trade chart
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/TradeChart.png)
+This shows all the trades found for the strategy - these can then be shown on the trade chart.
 
+## Equity chart
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EquityResults.png)
+This is the chart of equity over the time of the simulated trades. This is the random trades strategy which results in the account dropping to zero.
