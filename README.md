@@ -17,3 +17,10 @@ I've been creating this to design and run my own trading strategies.
 ## Progress so far
 From the project aims, I have everything above 1-9 done in a basic form. Below are screenshots of progress so far. This is still highly experimental.
 
+Any feedback or ideas are welcome!
+
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EditStrategy.png)
+
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/TradeChart.png)
+
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EquityResults.png)
