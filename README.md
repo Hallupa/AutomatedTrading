@@ -1,6 +1,6 @@
 # Trade Bot designer and runner
 
-The is an experimental work-in-progress to create an application to design spread betting trading bots and run live against FXCM.
+This is created in C# and is an experimental work-in-progress to create an application to design spread betting trading bots and run live against FXCM.
 I've been creating this to design and run my own trading strategies.
 
 ## Project aims
