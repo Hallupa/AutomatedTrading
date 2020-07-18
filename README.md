@@ -1,6 +1,6 @@
 # Trade Bot designer and runner
 
-This is created in C# and is an experimental work-in-progress to create an application to design spread betting trading bots and run live against FXCM.
+This is created in C# in Visual Studio 2019. It is an experimental work-in-progress to create an application to design spread betting trading bots and run them live against FXCM.
 I've been creating this to design and run my own trading strategies.
 
 ## Project aims
@@ -17,6 +17,7 @@ I've been creating this to design and run my own trading strategies.
 ## Progress so far
 From the project aims, I have everything above 1-9 done in a basic form. Below are screenshots of progress so far. This is still highly experimental.
 
+At present I'm just focusing on making this useful for me but if others are interested in this also, I will take feedback and maybe add an installer.
 Any feedback or ideas are welcome!
 
 ## Strategy editor screen
