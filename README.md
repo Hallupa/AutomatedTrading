@@ -1,6 +1,6 @@
-# Trade Bot designer
+# Trade Bot designer and runner
 
-The is an experimental work-in-progress to create an application to design spread betting trading bots and run live against FXCM.
+This is created in C# in Visual Studio 2019. It is an experimental work-in-progress to create an application to design spread betting trading bots and run them live against FXCM.
 I've been creating this to design and run my own trading strategies.
 
 ## Project aims
@@ -17,3 +17,19 @@ I've been creating this to design and run my own trading strategies.
 ## Progress so far
 From the project aims, I have everything above 1-9 done in a basic form. Below are screenshots of progress so far. This is still highly experimental.
 
+At present I'm just focusing on making this useful for me but if others are interested in this also, I will take feedback and maybe add an installer.
+Any feedback or ideas are welcome!
+
+## Strategy editor screen
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EditStrategy.png)
+On the right is the strategy editor section - this shows a strategy created for placing random trades.
+Coding strategies has been designed to be as simple as possible as shown in the screenshot.
+The log at the bottom of the screenshot demonstrates  just how fast a strategy can run - 33 markets run in 35 seconds creating 105k trades over the 10 years of data.
+
+## Trade chart
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/TradeChart.png)
+This shows all the trades found for the strategy - these can then be shown on the trade chart.
+
+## Equity chart
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EquityResults.png)
+This is the chart of equity over the time of the simulated trades. This is the random trades strategy which results in the account dropping to zero.
