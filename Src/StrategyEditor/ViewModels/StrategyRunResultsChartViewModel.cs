@@ -42,7 +42,7 @@ namespace StrategyEditor.ViewModels
                 var xvalues = new List<DateTime>();
                 var yvalues = new List<double>();
 
-                var startedTrades = trades.Where(t => t.EntryDateTime != null).ToList();
+                var startedTrades = trades.Where(t => t.EntryDateTime != null && !t.Ignore).ToList();
 
                 if (startedTrades.Count > 0)
                 {
