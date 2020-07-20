@@ -361,7 +361,7 @@ namespace StrategyRunnerLive.ViewModels
             }
 
             // Get markets
-            markets = GetStrategyMarkets(strategyType);
+            markets = StrategyHelper.GetStrategyMarkets(strategyType);
             timeframes = GetStrategyTimeframes(strategyType);
             return strategyType;
         }
@@ -411,17 +411,6 @@ namespace StrategyRunnerLive.ViewModels
                     strategy.Trades.AddTrade(newTrade);
                 }
             }
-        }
-
-        private string[] GetStrategyMarkets(Type strategyType)
-        {
-            var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
-            if (strategy != null && strategy.Markets == null)
-            {
-                return StrategyBase.Majors.Concat(StrategyBase.Minors).Concat(StrategyBase.MajorIndices).ToArray();
-            }
-
-            return strategy.Markets;
         }
 
         private Timeframe[] GetStrategyTimeframes(Type strategyType)

@@ -18,7 +18,6 @@ using Hallupa.Library;
 using Hallupa.Library.UI.Views;
 using log4net;
 using TraderTools.Basics;
-using TraderTools.Core.Trading;
 using TraderTools.Core.UI.ViewModels;
 using TraderTools.Simulation;
 
@@ -222,7 +221,6 @@ namespace StrategyEditor.ViewModels
 
                 Log.Info("Running simulation");
                 _stopRun = false;
-                var stopwatch = Stopwatch.StartNew();
 
                 _results.Reset();
 
@@ -241,117 +239,10 @@ namespace StrategyEditor.ViewModels
                     StopStrategyEnabled = true;
                 }));
 
-                var completed = 0;
+                var trades  =StrategyRunner.Run(_strategyType, () => _stopRun,
+                    _candlesService, _marketDetailsService, _broker, 4);
 
-                _producerConsumer = new ProducerConsumer<(Type StrategyType, MarketDetails Market)>(4, d =>
-                {
-                    if (_stopRun) return ProducerConsumerActionResult.Stop;
-                    var strategyTester =
-                        new StrategyRunner(_candlesService, _marketDetailsService, _broker,
-                            d.Market); //, _tradeCalculatorService, _marketDetailsService,
-                    //_tradeCache,
-                    //SimulationRunnerFlags.DoNotValidateStopsLimitsOrders);
-                    var strategy = (StrategyBase)Activator.CreateInstance(d.StrategyType);
-                    if (strategy != null && strategy.Markets == null)
-                    {
-                        strategy.SetMarkets(StrategyBase.GetDefaultMarkets());
-                    }
-
-                    var result = strategyTester.Run(strategy, getShouldStopFunc: () => _stopRun, strategy.StartTime, strategy.EndTime);
-
-
-
-                    if (result != null)
-                    {
-                        _results.AddResult(result);
-
-                        // Adding trades to UI in realtime slows down the UI too much with strategies with many trades
-
-                        completed++;
-                        Log.Info($"Completed {completed}/{strategy.Markets.Length}");
-                    }
-
-                    return ProducerConsumerActionResult.Success;
-                });
-
-                var expectedTrades = new List<ExpectedTradeAttribute>();
-                var strategy = (StrategyBase)Activator.CreateInstance(_strategyType);
-
-                if (strategy != null && strategy.Markets == null)
-                {
-                    strategy.SetMarkets(StrategyBase.GetDefaultMarkets());
-                }
-
-                foreach (var market in strategy.Markets)
-                {
-                    _producerConsumer.Add((_strategyType, _marketDetailsService.GetMarketDetails(_broker.Name, market)));
-                     var expectedTradesFile = strategy.GetType().GetCustomAttribute<ExpectedTradesFileAttribute>();
-                     if (expectedTradesFile != null)
-                     {
-                         var lines = File.ReadAllLines(expectedTradesFile.Path);
-                         for (var i = 1; i < lines.Length; i++)
-                         {
-                             var line = lines[i];
-                             var csv = line.Split(',');
-                             var expectedTrade = new ExpectedTradeAttribute(
-                                 csv[1],
-                                 csv[0],
-                                 csv[10],
-                                  decimal.Parse(csv[6]),
-                                 decimal.Parse(csv[9]),
-                                 csv[2] == "Bullish" ? TradeDirection.Long : TradeDirection.Short);
-                             expectedTrades.Add(expectedTrade);
-                         }
-                     }
-                }
-
-                _producerConsumer.Start();
-                _producerConsumer.SetProducerCompleted();
-                _producerConsumer.WaitUntilConsumersFinished();
-
-                var trades = _results.Results.ToList();
-
-                // Set trade profits
-                var balance = 10000M;
-                foreach (var t in trades.OrderBy(z => z.OrderDateTime ?? z.EntryDateTime))
-                {
-                    var riskAmount = (strategy.RiskEquityPercent / 100M) * balance;
-                    var profit = t.RMultiple * riskAmount ?? 0M;
-                    t.NetProfitLoss = profit;
-                    t.RiskAmount = riskAmount;
-                    balance += profit;
-
-                    if (balance < 0) balance = 0M;
-                }
-
-                stopwatch.Stop();
-                Log.Info($"Simulation run completed in {stopwatch.Elapsed.TotalSeconds}s");
-
-                var matches = 0;
-                foreach (var expectedTrade in expectedTrades.ToList())
-                {
-                    var matchedTrade = trades.FirstOrDefault(t =>
-                        Math.Abs(t.EntryPrice.Value - expectedTrade.EntryPrice) < 0.01M
-                        && (t.EntryDateTime == expectedTrade.OpenTimeUTC.AddHours(-2)
-                            || t.EntryDateTime == expectedTrade.OpenTimeUTC.AddHours(1)));
-                    if (matchedTrade != null)
-                    {
-                        trades.Remove(matchedTrade);
-                        expectedTrades.Remove(expectedTrade);
-                        matches++;
-                    }
-                }
-
-                if (expectedTrades.Count > 0)
-                {
-                    foreach (var expectedTrade in expectedTrades)
-                    {
-                        Log.Info(
-                            $"Not matched: Open:{expectedTrade.OpenTimeUTC} Entry:{expectedTrade.EntryPrice:0.000}");
-                    }
-
-                    Log.Info($"Matched {matches} trades. {trades.Count} additional trades. {expectedTrades.Count} not matched");
-                }
+                _results.AddResult(trades);
 
                 // Save results
                 /*if (File.Exists(_savedResultsPath))
@@ -361,7 +252,7 @@ namespace StrategyEditor.ViewModels
                 File.WriteAllText(_savedResultsPath, JsonConvert.SerializeObject(_results.Results));*/
 
 
-                // ==== Write ML learning data
+                // ==== Write ML learning data   TODO REMOVE
                 var outputPath = @"C:\OCW\SrcPythonAIForexTrader\Data\NewData.csv";
                 var dataWriter = new MLDataWriter(_broker, _candlesService);
                 var m = "GBP/USD";
