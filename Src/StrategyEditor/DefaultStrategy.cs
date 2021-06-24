@@ -9,35 +9,42 @@ namespace StrategyEditor
     public class DefaultStrategy : StrategyBase
     {
         private Random _rnd;
-        private IndicatorValues _atr;
+        private Dictionary<string, IndicatorValues> _atr = new Dictionary<string, IndicatorValues>();
 
         public DefaultStrategy()
         {
             _rnd = new Random();
-            _atr = ATR(Timeframe.H2);
             SetTimeframes(Timeframe.H2);
 
             AddMajors();
             AddMinors();
             AddMajorIndices();
 
-            SetRiskEquityPercent(0.2M);
+            foreach (var m in Markets)
+            {
+                _atr[m] = ATR(m, Timeframe.H2);
+            }
         }
 
-        public override void ProcessCandles(List<Timeframe> newCandleTimeframes)
+        public override void ProcessCandles(List<AddedCandleTimeframe> addedCandleTimeframes)
         {
-            if (!_atr.HasValue) return;
-
-            var c = Candles[Timeframe.H2].Last();
-            var r = _rnd.Next(0, 20);
-
-            if (r == 5)
+            foreach (var added in addedCandleTimeframes)
             {
-                MarketShort((decimal)(c.CloseBid + _atr.Value), (decimal)(c.CloseBid - _atr.Value));
-            }
-            else if (r == 10)
-            {
-                MarketLong((decimal)(c.CloseAsk - _atr.Value), (decimal)(c.CloseAsk + _atr.Value));
+                if (!_atr[added.Market].HasValue) continue;
+
+
+                var c = Candles[added.Market][Timeframe.H2].Last();
+                var r = _rnd.Next(0, 20);
+                var atr = _atr[added.Market];
+
+                if (r == 5)
+                {
+                    MarketShort(added.Market, Balance / (decimal)c.CloseBid, (decimal)(c.CloseBid + atr.Value), (decimal)(c.CloseBid - atr.Value));
+                }
+                else if (r == 10)
+                {
+                    MarketLong(added.Market, Balance / (decimal)c.CloseAsk, (decimal)(c.CloseAsk - atr.Value), (decimal)(c.CloseAsk + atr.Value));
+                }
             }
         }
     }

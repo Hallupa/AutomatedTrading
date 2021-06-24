@@ -17,10 +17,7 @@
             <converters:ObjectToBoolConverter x:Key="ObjToBool"/>
             <ui:BindingProxy x:Key="Proxy" Data="{Binding}" />
         </Grid.Resources>
-        <s:SciChartSurface s:ThemeManager.Theme="Chrome">
-            <s:SciChartSurface.RenderableSeries>
-                <s:FastLineRenderableSeries SeriesColor="Blue" StrokeThickness="2" DataSeries="{Binding Series}"/>
-            </s:SciChartSurface.RenderableSeries>
+        <s:SciChartSurface s:ThemeManager.Theme="Chrome" RenderableSeries="{Binding SeriesList}">
 
             <s:SciChartSurface.XAxis>
                 <s:DateTimeAxis GrowBy="0.1, 0.1" DrawMinorGridLines="True"/>

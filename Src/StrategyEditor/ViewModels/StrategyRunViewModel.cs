@@ -224,23 +224,26 @@ namespace StrategyEditor.ViewModels
 
                 _results.Reset();
 
-                _dispatcher.Invoke((Action) (() =>
-                {
-                    _results.RaiseTestRunStarted();
+                _dispatcher.Invoke((Action)(() =>
+               {
+                   _results.RaiseTestRunStarted();
 
-                    NotifyPropertyChanged("TotalTrades");
-                    NotifyPropertyChanged("AverageRTrade");
-                    NotifyPropertyChanged("TotalR");
-                    NotifyPropertyChanged("PercentSuccessTrades");
-                    NotifyPropertyChanged("AverageWinningRRRTrades");
-                    NotifyPropertyChanged("AverageLosingRRRTrades");
+                   NotifyPropertyChanged("TotalTrades");
+                   NotifyPropertyChanged("AverageRTrade");
+                   NotifyPropertyChanged("TotalR");
+                   NotifyPropertyChanged("PercentSuccessTrades");
+                   NotifyPropertyChanged("AverageWinningRRRTrades");
+                   NotifyPropertyChanged("AverageLosingRRRTrades");
 
-                    RunStrategyEnabled = false;
-                    StopStrategyEnabled = true;
-                }));
+                   RunStrategyEnabled = false;
+                   StopStrategyEnabled = true;
+               }));
 
-                var trades  =StrategyRunner.Run(_strategyType, () => _stopRun,
-                    _candlesService, _marketDetailsService, _broker, 4);
+                var strategy = (StrategyBase)Activator.CreateInstance(_strategyType);
+                var runner = new StrategyRunner(_candlesService, _brokersService.GetBroker(strategy.Broker), 10000M, transactionFee: strategy.Commission);
+                var trades = runner.Run(
+                    strategy,
+                    () => _stopRun);
 
                 _results.AddResult(trades);
 
@@ -397,7 +400,7 @@ namespace StrategyEditor.ViewModels
         private const int CandlesT3 = 6;  // Normalise over larger range
         private const int CandlesAO = 6; // Normalise over larger range
         private const int CandlesSpread = 5;
-        
+
         public MLDataWriter(IBroker broker, IBrokersCandlesService candlesService)
         {
             _broker = broker;
@@ -408,89 +411,89 @@ namespace StrategyEditor.ViewModels
         {
             try
             {
-               /* foreach (var t in trades)
-                {
-                    if (string.IsNullOrEmpty(t.CustomText1))
-                    {
-                        t.CustomText1 = "OneStrategy";
-                    }
-                }
+                /* foreach (var t in trades)
+                 {
+                     if (string.IsNullOrEmpty(t.CustomText1))
+                     {
+                         t.CustomText1 = "OneStrategy";
+                     }
+                 }
 
-                // Organise trades by order date/time
-                var tradesByDateTime = new Dictionary<DateTime, List<Trade>>();
-                foreach (var t in trades.Where(x => x.OrderDateTime != null || x.EntryDateTime != null))
-                {
-                    var d = t.OrderDateTime ?? t.EntryDateTime;
-                    if (!tradesByDateTime.ContainsKey(d.Value))
-                        tradesByDateTime.Add(d.Value, new List<Trade>());
-                    tradesByDateTime[d.Value].Add(t);
-                }
+                 // Organise trades by order date/time
+                 var tradesByDateTime = new Dictionary<DateTime, List<Trade>>();
+                 foreach (var t in trades.Where(x => x.OrderDateTime != null || x.EntryDateTime != null))
+                 {
+                     var d = t.OrderDateTime ?? t.EntryDateTime;
+                     if (!tradesByDateTime.ContainsKey(d.Value))
+                         tradesByDateTime.Add(d.Value, new List<Trade>());
+                     tradesByDateTime[d.Value].Add(t);
+                 }
 
-                var setups = trades.SelectMany(x => x.CustomText1.Split(',')).Distinct().OrderBy(a => a).ToList();
+                 var setups = trades.SelectMany(x => x.CustomText1.Split(',')).Distinct().OrderBy(a => a).ToList();
 
-                var timeframeIndicators = new TimeframeLookup<Indicator[]>();
-                timeframeIndicators.Add(timeframe,
-                    new[]
-                    {
-                        Indicator.ATR, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.T3CCI, Indicator.AO
-                    });
-                var timeframesAllCandles = TimeframeLookupBasicCandleAndIndicators.PopulateCandles(_broker, market,
-                    new[] { timeframe }, timeframeIndicators, _candlesService);
-                var m1Candles = TimeframeLookupBasicCandleAndIndicators.GetM1Candles(_broker, market, _candlesService);
+                 var timeframeIndicators = new TimeframeLookup<Indicator[]>();
+                 timeframeIndicators.Add(timeframe,
+                     new[]
+                     {
+                         Indicator.ATR, Indicator.EMA8, Indicator.EMA25, Indicator.EMA50, Indicator.T3CCI, Indicator.AO
+                     });
+                 var timeframesAllCandles = TimeframeLookupBasicCandleAndIndicators.PopulateCandles(_broker, market,
+                     new[] { timeframe }, timeframeIndicators, _candlesService);
+                 var m1Candles = TimeframeLookupBasicCandleAndIndicators.GetM1Candles(_broker, market, _candlesService);
 
-                var prices = new List<float>();
-                var emas = new List<float>();
-                var t3 = new List<float>();
-                var ao = new List<float>();
-                var spread = new List<float>(); // Spread should be normalised like prices to keep same scale
+                 var prices = new List<float>();
+                 var emas = new List<float>();
+                 var t3 = new List<float>();
+                 var ao = new List<float>();
+                 var spread = new List<float>(); // Spread should be normalised like prices to keep same scale
 
-                var str = new StringBuilder();
-                CreateHeader(str, CandlesOfPrices, CandlesSpread, CandlesOfEma, CandlesT3, CandlesAO, setups);
-                var columnsCount = str.ToString().Split(',').Length + 1;
+                 var str = new StringBuilder();
+                 CreateHeader(str, CandlesOfPrices, CandlesSpread, CandlesOfEma, CandlesT3, CandlesAO, setups);
+                 var columnsCount = str.ToString().Split(',').Length + 1;
 
-                float? t3Min = null, t3Max = null, aoMin = null, aoMax = null;
-                TimeframeLookupBasicCandleAndIndicators.IterateThroughCandles(
-                    timeframesAllCandles,
-                    m1Candles,
-                    n =>
-                    {
-                        if (!n.NewCandleFlags.HasFlag(NewCandleFlags.CompleteNonM1Candle)) return;
-                        var c = n.CurrentCandles[timeframe][n.CurrentCandles[timeframe].Count - 1];
+                 float? t3Min = null, t3Max = null, aoMin = null, aoMax = null;
+                 TimeframeLookupBasicCandleAndIndicators.IterateThroughCandles(
+                     timeframesAllCandles,
+                     m1Candles,
+                     n =>
+                     {
+                         if (!n.NewCandleFlags.HasFlag(NewCandleFlags.CompleteNonM1Candle)) return;
+                         var c = n.CurrentCandles[timeframe][n.CurrentCandles[timeframe].Count - 1];
 
-                        // Update all data (Un-normalised)
-                        UpdateData(c, prices, spread, emas, t3, ao, ref t3Min, ref t3Max, ref aoMin, ref aoMax);
+                         // Update all data (Un-normalised)
+                         UpdateData(c, prices, spread, emas, t3, ao, ref t3Min, ref t3Max, ref aoMin, ref aoMax);
 
-                        if (t3Min == null || t3Max == null || aoMin == null || aoMax == null) return;
+                         if (t3Min == null || t3Max == null || aoMin == null || aoMax == null) return;
 
-                        if (!GetInputsForLine(prices, emas, spread, t3, ao, t3Min.Value, t3Max.Value, aoMin.Value,
-                            aoMax.Value, out var p, out var e, out var s, out var t, out var a)) return;
-                        if (!GetTradesForLine(tradesByDateTime, c, setups, out var bestTrade,
-                            out var orderedTrades)) return;
+                         if (!GetInputsForLine(prices, emas, spread, t3, ao, t3Min.Value, t3Max.Value, aoMin.Value,
+                             aoMax.Value, out var p, out var e, out var s, out var t, out var a)) return;
+                         if (!GetTradesForLine(tradesByDateTime, c, setups, out var bestTrade,
+                             out var orderedTrades)) return;
 
-                        var newLineStr = new StringBuilder();
-                        AddLine(newLineStr, p, e, s, t, a, bestTrade, orderedTrades);
-                        var lineColumnCount = newLineStr.ToString().Split(',').Length + 1;
-                        if (lineColumnCount != columnsCount)
-                        {
-                            Log.Error($"Wrong number of columns for line - should have {columnsCount} columns");
-                        }
+                         var newLineStr = new StringBuilder();
+                         AddLine(newLineStr, p, e, s, t, a, bestTrade, orderedTrades);
+                         var lineColumnCount = newLineStr.ToString().Split(',').Length + 1;
+                         if (lineColumnCount != columnsCount)
+                         {
+                             Log.Error($"Wrong number of columns for line - should have {columnsCount} columns");
+                         }
 
-                        str.Append(newLineStr);
-                    },
-                    d => $"Creating data {d.PercentComplete:0.00}%", () => false);
+                         str.Append(newLineStr);
+                     },
+                     d => $"Creating data {d.PercentComplete:0.00}%", () => false);
 
-                // Check again for correct column count
-                foreach (var line in str.ToString().Split('\n'))
-                {
-                    if (line.Split(',').Length + 1 != columnsCount)
-                    {
-                        Log.Error($"Wrong number of columns for line - should have {columnsCount} columns");
-                    }
-                }
+                 // Check again for correct column count
+                 foreach (var line in str.ToString().Split('\n'))
+                 {
+                     if (line.Split(',').Length + 1 != columnsCount)
+                     {
+                         Log.Error($"Wrong number of columns for line - should have {columnsCount} columns");
+                     }
+                 }
 
-                Log.Info($"Writing results to file {outputDataPath}");
-                File.WriteAllText(outputDataPath, str.ToString());
-                Log.Info("Done");*/
+                 Log.Info($"Writing results to file {outputDataPath}");
+                 File.WriteAllText(outputDataPath, str.ToString());
+                 Log.Info("Done");*/
             }
             catch (Exception ex)
             {
@@ -538,131 +541,131 @@ namespace StrategyEditor.ViewModels
             }
         }
 
-       /* private static void UpdateData(CandleAndIndicators c, List<float> prices, List<float> spread, List<float> emas,
-            List<float> t3, List<float> ao, ref float? t3Min, ref float? t3Max, ref float? aoMin, ref float? aoMax)
-        {
-            // Update prices and spread
-            prices.AddRange(new[] { c.Candle.CloseBid, c.Candle.OpenBid, c.Candle.HighBid, c.Candle.LowBid });
-            spread.Add(Math.Abs(c.Candle.HighBid - c.Candle.HighAsk));
+        /* private static void UpdateData(CandleAndIndicators c, List<float> prices, List<float> spread, List<float> emas,
+             List<float> t3, List<float> ao, ref float? t3Min, ref float? t3Max, ref float? aoMin, ref float? aoMax)
+         {
+             // Update prices and spread
+             prices.AddRange(new[] { c.Candle.CloseBid, c.Candle.OpenBid, c.Candle.HighBid, c.Candle.LowBid });
+             spread.Add(Math.Abs(c.Candle.HighBid - c.Candle.HighAsk));
 
-            // Update EMAs
-            if (c[Indicator.EMA8].IsFormed && c[Indicator.EMA25].IsFormed && c[Indicator.EMA50].IsFormed)
-            {
-                emas.AddRange(new[] { c[Indicator.EMA8].Value, c[Indicator.EMA25].Value, c[Indicator.EMA50].Value });
-            }
+             // Update EMAs
+             if (c[Indicator.EMA8].IsFormed && c[Indicator.EMA25].IsFormed && c[Indicator.EMA50].IsFormed)
+             {
+                 emas.AddRange(new[] { c[Indicator.EMA8].Value, c[Indicator.EMA25].Value, c[Indicator.EMA50].Value });
+             }
 
-            // Update other indicators
-            if (c[Indicator.T3CCI].IsFormed)
-            {
-                var v = c[Indicator.T3CCI].Value;
-                t3.Add(v);
-                if (t3Min == null || v < t3Min) t3Min = v;
-                if (t3Max == null || v > t3Min) t3Max = v;
-            }
+             // Update other indicators
+             if (c[Indicator.T3CCI].IsFormed)
+             {
+                 var v = c[Indicator.T3CCI].Value;
+                 t3.Add(v);
+                 if (t3Min == null || v < t3Min) t3Min = v;
+                 if (t3Max == null || v > t3Min) t3Max = v;
+             }
 
-            if (c[Indicator.AO].IsFormed)
-            {
-                var v = c[Indicator.AO].Value;
-                ao.Add(v);
-                if (aoMin == null || v < aoMin) aoMin = v;
-                if (aoMax == null || v > aoMax) aoMax = v;
-            }
-        }
-        private static bool GetInputsForLine(
-            List<float> prices, List<float> emas, List<float> spread, List<float> t3, List<float> ao,
-            float t3Min, float t3Max, float aoMin, float aoMax,
-            out List<float> p, out List<float> e, out List<float> s, out List<float> t, out List<float> a)
-        {
-            p = null;
-            e = null;
-            s = null;
-            t = null;
-            a = null;
-            if (prices.Count < CandlesOfPrices * 4 || emas.Count < CandlesOfEma * 3) return false;
+             if (c[Indicator.AO].IsFormed)
+             {
+                 var v = c[Indicator.AO].Value;
+                 ao.Add(v);
+                 if (aoMin == null || v < aoMin) aoMin = v;
+                 if (aoMax == null || v > aoMax) aoMax = v;
+             }
+         }
+         private static bool GetInputsForLine(
+             List<float> prices, List<float> emas, List<float> spread, List<float> t3, List<float> ao,
+             float t3Min, float t3Max, float aoMin, float aoMax,
+             out List<float> p, out List<float> e, out List<float> s, out List<float> t, out List<float> a)
+         {
+             p = null;
+             e = null;
+             s = null;
+             t = null;
+             a = null;
+             if (prices.Count < CandlesOfPrices * 4 || emas.Count < CandlesOfEma * 3) return false;
 
-            // Get prices and EMAs and normalise together
-            p = prices.TakeLast(CandlesOfPrices * 4).ToList();
-            e = emas.TakeLast(CandlesOfEma * 3).ToList();
-            var m = Normalise(p, e);
+             // Get prices and EMAs and normalise together
+             p = prices.TakeLast(CandlesOfPrices * 4).ToList();
+             e = emas.TakeLast(CandlesOfEma * 3).ToList();
+             var m = Normalise(p, e);
 
-            // Get spreads - this should be normalised using just the range - the positions don't need to be adjusted
-            s = spread.TakeLast(5).ToList();
-            s = s.Select(x => x / (m.Max - m.Min)).ToList();
+             // Get spreads - this should be normalised using just the range - the positions don't need to be adjusted
+             s = spread.TakeLast(5).ToList();
+             s = s.Select(x => x / (m.Max - m.Min)).ToList();
 
-            // T3 should have the same range over whole time period - use that for normalising
-            t = t3.TakeLast(CandlesT3).Select(x => (x - t3Min) / (t3Max - t3Min)).ToList();
+             // T3 should have the same range over whole time period - use that for normalising
+             t = t3.TakeLast(CandlesT3).Select(x => (x - t3Min) / (t3Max - t3Min)).ToList();
 
-            // AO should have the same range over whole time period - use that for normalising
-            a = ao.TakeLast(CandlesAO).Select(x => (x - aoMin) / (aoMax - aoMin)).ToList();
-            return true;
-        }
+             // AO should have the same range over whole time period - use that for normalising
+             a = ao.TakeLast(CandlesAO).Select(x => (x - aoMin) / (aoMax - aoMin)).ToList();
+             return true;
+         }
 
-        private static (float Min, float Max) Normalise(params List<float>[] lists)
-        {
-            var min = lists.SelectMany(x => x).Min();
-            var max = lists.SelectMany(x => x).Max();
-            var ratio = 1.0F / (max - min);
-            foreach (var list in lists)
-            {
-                for (var i = 0; i < list.Count; i++)
-                {
-                    list[i] = (list[i] - min) * ratio;
-                }
-            }
+         private static (float Min, float Max) Normalise(params List<float>[] lists)
+         {
+             var min = lists.SelectMany(x => x).Min();
+             var max = lists.SelectMany(x => x).Max();
+             var ratio = 1.0F / (max - min);
+             foreach (var list in lists)
+             {
+                 for (var i = 0; i < list.Count; i++)
+                 {
+                     list[i] = (list[i] - min) * ratio;
+                 }
+             }
 
-            return (min, max);
-        }
+             return (min, max);
+         }
 
-        private static bool GetTradesForLine(Dictionary<DateTime, List<Trade>> tradesByDateTime, CandleAndIndicators c, List<string> setups,
-            out Trade bestTrade, out List<Trade> orderedTrades)
-        {
-            bestTrade = null;
-            orderedTrades = null;
+         private static bool GetTradesForLine(Dictionary<DateTime, List<Trade>> tradesByDateTime, CandleAndIndicators c, List<string> setups,
+             out Trade bestTrade, out List<Trade> orderedTrades)
+         {
+             bestTrade = null;
+             orderedTrades = null;
 
-            // Get trades
-            tradesByDateTime.TryGetValue(c.Candle.CloseTime(), out var trades);
-           // if (trades == null || trades.Count(x => x.RMultiple != null) < (setups.Count * 0.1)) return false; // Need at least 10% of the trades for setups
+             // Get trades
+             tradesByDateTime.TryGetValue(c.Candle.CloseTime(), out var trades);
+            // if (trades == null || trades.Count(x => x.RMultiple != null) < (setups.Count * 0.1)) return false; // Need at least 10% of the trades for setups
 
-            // First, get best trade
-            bestTrade = trades.Where(x => x.RMultiple != null).OrderByDescending(x => x.RMultiple).FirstOrDefault();
+             // First, get best trade
+             bestTrade = trades.Where(x => x.RMultiple != null).OrderByDescending(x => x.RMultiple).FirstOrDefault();
 
-            // Get all trades in correct order
-            orderedTrades = new List<Trade>();
-            foreach (var setup in setups)
-            {
-                var t = trades.FirstOrDefault(x => x.CustomText1 == setup);
-                orderedTrades.Add(t);
-            }
+             // Get all trades in correct order
+             orderedTrades = new List<Trade>();
+             foreach (var setup in setups)
+             {
+                 var t = trades.FirstOrDefault(x => x.CustomText1 == setup);
+                 orderedTrades.Add(t);
+             }
 
-            return true;
-        }
+             return true;
+         }
 
-        private static void AddLine(StringBuilder str, List<float> p, List<float> e, List<float> s, List<float> t, List<float> a, Trade bestTrade,
-            List<Trade> orderedTrades)
-        {
-            str.AppendLine(string.Empty); // STart new line
+         private static void AddLine(StringBuilder str, List<float> p, List<float> e, List<float> s, List<float> t, List<float> a, Trade bestTrade,
+             List<Trade> orderedTrades)
+         {
+             str.AppendLine(string.Empty); // STart new line
 
-            // Write prices
-            var first = true;
-            foreach (var x in p)
-            {
-                if (!first) str.Append(",");
-                first = false;
-                str.Append($"{x:0.0000}");
-            }
+             // Write prices
+             var first = true;
+             foreach (var x in p)
+             {
+                 if (!first) str.Append(",");
+                 first = false;
+                 str.Append($"{x:0.0000}");
+             }
 
-            foreach (var x in e) str.Append($",{x:0.0000}"); // Write EMAs
-            foreach (var x in s) str.Append($",{x:0.0000}"); // Write spreads
-            foreach (var x in t) str.Append($",{x:0.0000}"); // Write T3s
-            foreach (var x in a) str.Append($",{x:0.0000}"); // Write AOs
+             foreach (var x in e) str.Append($",{x:0.0000}"); // Write EMAs
+             foreach (var x in s) str.Append($",{x:0.0000}"); // Write spreads
+             foreach (var x in t) str.Append($",{x:0.0000}"); // Write T3s
+             foreach (var x in a) str.Append($",{x:0.0000}"); // Write AOs
 
-            // Write best setup
-            str.Append($",{bestTrade?.CustomText1}");
+             // Write best setup
+             str.Append($",{bestTrade?.CustomText1}");
 
-            foreach (var trade in orderedTrades)
-            {
-                str.Append(trade != null ? $",{trade.RMultiple:0.0000}" : ",");
-            }
-        }*/
+             foreach (var trade in orderedTrades)
+             {
+                 str.Append(trade != null ? $",{trade.RMultiple:0.0000}" : ",");
+             }
+         }*/
     }
 }

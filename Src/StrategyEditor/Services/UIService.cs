@@ -41,6 +41,20 @@ namespace StrategyEditor.Services
             }
         }
 
+        public static readonly DependencyProperty UseHeikenAshiProperty = DependencyProperty.Register(
+            "UseHeikenAshi", typeof(bool), typeof(UIService), new PropertyMetadata(false, UseHeikenAshiChanged));
+
+        private static void UseHeikenAshiChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((UIService)d).ViewTrade();
+        }
+
+        public bool UseHeikenAshi
+        {
+            get { return (bool) GetValue(UseHeikenAshiProperty); }
+            set { SetValue(UseHeikenAshiProperty, value); }
+        }
+
         public DisplayPages? SelectedDisplayPage
         {
             get => _selectedDisplayPage;

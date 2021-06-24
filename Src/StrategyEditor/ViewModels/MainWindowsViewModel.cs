@@ -13,6 +13,7 @@ using log4net;
 using StrategyEditor.Views;
 using TraderTools.Basics;
 using TraderTools.Basics.Helpers;
+using TraderTools.Brokers.Binance;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
@@ -53,10 +54,10 @@ namespace StrategyEditor.ViewModels
 
             UpdateFXCandlesCommand = new DelegateCommand(UpdateFXCandles);
 
-            var fxcm = new FxcmBroker();
             var brokers = new IBroker[]
             {
-                fxcm,
+                new FxcmBroker(),
+                new BinanceBroker("TODO", "TODO"), 
             };
 
             // Setup brokers and load accounts

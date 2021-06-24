@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Reflection;
@@ -30,6 +31,7 @@ namespace StrategyEditor.ViewModels
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
             ChartViewModel = new ChartViewModel();
+            ((INotifyPropertyChanged)ChartViewModel).PropertyChanged += ChartViewModelPropertyChanged;
             TradesViewModel = new TradeListViewModel();
             ChartViewModel.ChartTimeframe = Timeframe.H4;
 
@@ -45,7 +47,7 @@ namespace StrategyEditor.ViewModels
                 }
 
                 ChartViewModel.ShowTrade(TradesViewModel.SelectedTrade,
-                    TradesViewModel.SelectedTrade.Timeframe ?? Timeframe.H2, false,
+                    ChartViewModel.ChartTimeframeOptions[ChartViewModel.SelectedChartTimeframeIndex], false,
                     s => { },
                     new List<(IIndicator Indicator, Color Color, bool ShowInLegend)>()
                     {
@@ -54,7 +56,8 @@ namespace StrategyEditor.ViewModels
                         (new ExponentialMovingAverage(50), Colors.Blue, true),
                         (new BollingerBand(1.5F, 20), Colors.Green, true),
                         (new BollingerBand(-1.5F, 20), Colors.Green, false)
-                    });
+                    },
+                    _uiService.UseHeikenAshi);
             });
 
             ResultsViewModel = new TradesResultsViewModel(() =>
@@ -88,6 +91,14 @@ namespace StrategyEditor.ViewModels
             TradesViewModel.ShowClosedTrades = true;
             TradesViewModel.ShowOpenTrades = true;
             TradesViewModel.ShowOrders = true;
+        }
+
+        private void ChartViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "SelectedChartTimeframeIndex")
+            {
+                _uiService?.ViewTradeCommand.Execute(null);
+            }
         }
 
         public TradeListViewModel TradesViewModel { get; set; }

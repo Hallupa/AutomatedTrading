@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Abt.Controls.SciChart.Model.DataSeries;
+using Abt.Controls.SciChart.Visuals.RenderableSeries;
 using Hallupa.Library;
 using StrategyEditor.Services;
 using TraderTools.Basics;
@@ -27,15 +29,31 @@ namespace StrategyEditor.ViewModels
             _dispatcher = Dispatcher.CurrentDispatcher;
             DependencyContainer.ComposeParts(this);
 
+            SeriesList = new ObservableCollection<IRenderableSeries>();
             _testResultsStartedObserver = _results.TestRunStarted.Subscribe(UpdateChartData);
             _testResultsUpdatedObserver = _results.TestRunCompleted.Subscribe(UpdateChartData);
+            ClearResultsChartCommand = new DelegateCommand(o => ClearResultsChart());
+        }
 
-            Series = new XyDataSeries<DateTime, double>();
+        public static readonly DependencyProperty SeriesListProperty = DependencyProperty.Register(
+            "SeriesList", typeof(ObservableCollection<IRenderableSeries>), typeof(StrategyRunResultsChartViewModel), new PropertyMetadata(default(ObservableCollection<IRenderableSeries>)));
+
+        public ObservableCollection<IRenderableSeries> SeriesList
+        {
+            get { return (ObservableCollection<IRenderableSeries>) GetValue(SeriesListProperty); }
+            set { SetValue(SeriesListProperty, value); }
+        }
+
+        public DelegateCommand ClearResultsChartCommand { get; private set; }
+        
+        private void ClearResultsChart()
+        {
+            SeriesList.Clear();
         }
 
         private void UpdateChartData(List<Trade> trades)
         {
-            Series.Clear();
+            var series = new XyDataSeries<DateTime, double>();
 
             Task.Run(() =>
             {
@@ -64,13 +82,16 @@ namespace StrategyEditor.ViewModels
                             {
                                 var risk = t.RiskAmount.Value;
                                 var candle =
-                                    _brokersCandlesService.GetLastClosedCandle(t.Market, broker, Timeframe.D1, date,
+                                    _brokersCandlesService.GetLastClosedCandle(t.Market, _brokerService.GetBroker(t.Broker), Timeframe.D1, date,
                                         false);
                                 var price = (decimal)(t.TradeDirection == TradeDirection.Long
                                     ? candle.Value.CloseBid
                                     : candle.Value.CloseAsk);
-                                var stopDist = t.InitialStop.Value - t.EntryPrice;
-                                var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;
+
+
+                                /*var stopDist = t.InitialStop.Value - t.EntryPrice;
+                                var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;*/
+                                var profit = price * t.EntryQuantity.Value - t.EntryPrice.Value * t.EntryQuantity.Value; //TODO Add commission
                                 balance += (decimal)profit;
                             }
                         }
@@ -78,22 +99,21 @@ namespace StrategyEditor.ViewModels
                         xvalues.Add(date);
                         yvalues.Add((double)balance);
                     }
+
+                    series.Append(xvalues, yvalues);
                 }
 
                 _dispatcher.Invoke(() =>
                 {
-                    ((XyDataSeries<DateTime, double>)Series).Append(xvalues, yvalues);
+                    var renderableSeries = new FastLineRenderableSeries
+                    {
+                        DataSeries = series,
+                        StrokeThickness = 2
+                    };
+
+                    SeriesList.Add(renderableSeries);
                 });
             });
-        }
-
-        public static readonly DependencyProperty SeriesProperty = DependencyProperty.Register(
-            "Series", typeof(IDataSeries), typeof(StrategyRunResultsChartViewModel), new PropertyMetadata(default(IDataSeries)));
-
-        public IDataSeries Series
-        {
-            get { return (IDataSeries)GetValue(SeriesProperty); }
-            set { SetValue(SeriesProperty, value); }
         }
     }
 }
