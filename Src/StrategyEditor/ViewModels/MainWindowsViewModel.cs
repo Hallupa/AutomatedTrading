@@ -26,7 +26,8 @@ namespace StrategyEditor.ViewModels
     {
         RunCustomStrategy,
         RunStrategyResults,
-        RunStrategyResultsChart
+        RunStrategyResultsChart,
+        MachineLearning
     }
 
     public class MainWindowsViewModel : INotifyPropertyChanged

@@ -1,0 +1,89 @@
+﻿<Page x:Class="StrategyEditor.Views.MachineLearningView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:StrategyEditor.Views"
+      xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
+      xmlns:chartModifiers="clr-namespace:TraderTools.Core.UI.ChartModifiers;assembly=TraderTools.Core.UI"
+      xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
+      xmlns:ui1="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
+      xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="MachineLearningView">
+    <Grid>
+        <Grid.Resources>
+            <converters:ObjectToBoolConverter x:Key="ObjToBool"/>
+            <ui:BindingProxy x:Key="Proxy" Data="{Binding}" />
+            <Style x:Key="ChartPaneStyle" TargetType="s:SciChartGroupPane">
+                <Setter Property="Height" Value="{Binding PaneViewModel.Height, Mode=TwoWay}"/>
+            </Style>
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ComboBox Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Path=MLPointSets}" SelectedItem="{Binding SelectedMLPointsSet}" DisplayMemberPath="Name"/>
+        <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Path=SelectedMLPointsSet.Points}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120px"/>
+                            <ColumnDefinition Width="70px"/>
+                            <ColumnDefinition Width="40px"/>
+                            <ColumnDefinition Width="40px"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Content="{Binding Path=DateTimeUtc}" ContentStringFormat="{}{0:dd/MM/yy HH:mm:ss}"/>
+                        <Label Grid.Column="1" Content="{Binding Path=Market}"/>
+                        <Label Grid.Column="2" Content="{Binding Path=PointType}"/>
+                        <Label Grid.Column="3" Content="{Binding Path=Timeframe}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <s:SciChartGroup Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" ItemsSource="{Binding Chart.ChartViewModel.ChartPaneViewModels}"
+                         s:ThemeManager.Theme="Chrome" x:Name="MainChartGroup" x:FieldModifier="public" ItemContainerStyle="{StaticResource ChartPaneStyle}">
+            <s:SciChartGroup.ItemTemplate>
+                <DataTemplate>
+
+                    <s:SciChartSurface Annotations="{Binding TradeAnnotations}" s:ThemeManager.Theme="Chrome" SeriesSource="{Binding ChartSeriesViewModels}" Grid.Row="1" Grid.Column="1">
+                        <s:SciChartSurface.XAxis>
+                            <s:DateTimeAxis />
+                        </s:SciChartSurface.XAxis>
+
+                        <s:SciChartSurface.YAxis>
+                            <s:NumericAxis AutoRange="Always" />
+                        </s:SciChartSurface.YAxis>
+
+                        <s:SciChartSurface.ChartModifier>
+                            <s:ModifierGroup>
+                                <chartModifiers:MouseModifier/>
+                                <chartModifiers:RubberBandXyZoomModifierEnhanced ExecuteOn="MouseLeftButton" RubberBandFill="#66CCCCCC" RubberBandStroke="#AADDDDDD" RubberBandStrokeDashArray="2 2"
+                                                                     IsEnabled="{Binding Data.ChartingService.ChartMode, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static ui1:ChartMode.Zoom}, Source={StaticResource Proxy}}"/>
+                                <s:ZoomPanModifier ExecuteOn="MouseLeftButton" ClipModeX="None"
+                                       IsEnabled="{Binding Data.ChartingService.ChartMode, Converter={StaticResource ObjToBool}, ConverterParameter={x:Null}, Source={StaticResource Proxy}}" />
+                                <s:YAxisDragModifier DragMode="Scale"/>
+                                <s:XAxisDragModifier DragMode="Scale"/>
+                                <s:MouseWheelZoomModifier/>
+                                <s:ZoomExtentsModifier ExecuteOn="MouseDoubleClick" />
+
+                                <s:TooltipModifier></s:TooltipModifier>
+                                <s:CursorModifier></s:CursorModifier>
+                                <s:LegendModifier x:Name="legendModifier" ShowLegend="True" Orientation="Horizontal" Margin="10"/>
+                            </s:ModifierGroup>
+                        </s:SciChartSurface.ChartModifier>
+
+                    </s:SciChartSurface>
+                </DataTemplate>
+            </s:SciChartGroup.ItemTemplate>
+        </s:SciChartGroup>
+    </Grid>
+</Page>

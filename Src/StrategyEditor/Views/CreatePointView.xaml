@@ -1,0 +1,23 @@
+﻿<Window x:Class="StrategyEditor.Views.CreatePointView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StrategyEditor.Views"
+        mc:Ignorable="d"
+        Title="CreatePointView" Height="250" Width="400" WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center">
+            <Button Content="OK" Command="{Binding OkCommand}" Margin="5" Padding="10"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="5" Padding="10"/>
+        </StackPanel>
+    </Grid>
+</Window>
