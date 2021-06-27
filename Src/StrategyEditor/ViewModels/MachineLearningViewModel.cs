@@ -4,9 +4,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Hallupa.Library;
+using log4net;
 using Newtonsoft.Json;
 using StrategyEditor.ML;
 using StrategyEditor.Views;
@@ -23,15 +26,17 @@ namespace StrategyEditor.ViewModels
         [Import] private IBrokersCandlesService _candlesService;
         [Import] private IBrokersService _brokersService;
         private IDisposable _chartClickedDisposable;
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public MachineLearningViewModel()
         {
+            _dispatcher = Dispatcher;
             DependencyContainer.ComposeParts(this);
             CreatePointCommand = new DelegateCommand(o => CreatePoint());
             CreatePointSetCommand = new DelegateCommand(o => CreatePointSet());
             DeletePointSetCommand = new DelegateCommand(o => DeletePointSet());
             TrainCommand = new DelegateCommand(o => Train(), o => IsTrainingEnabled);
-            TestCommand = new DelegateCommand(o => TestModel());
+            TestCommand = new DelegateCommand(o => TestModel(), o => IsTestEnabled);
             Chart = new MachineLearningChartViewModel();
             _chartClickedDisposable = ChartingService.ChartClickObservable.Subscribe(ChartClicked);
             Load();
@@ -54,6 +59,7 @@ namespace StrategyEditor.ViewModels
 
         public MachineLearningChartViewModel Chart { get; }
         public bool IsTrainingEnabled { get; set; } = true;
+        public bool IsTestEnabled { get; set; } = true;
         public ObservableCollection<MLPointCollection> MLPointSets { get; } = new ObservableCollection<MLPointCollection>();
 
         public static readonly DependencyProperty SelectedMLPointsSetProperty = DependencyProperty.Register(
@@ -61,6 +67,7 @@ namespace StrategyEditor.ViewModels
 
         private MLPoint _pointCreating;
         private Trainer _trainer;
+        private Dispatcher _dispatcher;
 
         public MLPointCollection SelectedMLPointsSet
         {
@@ -81,16 +88,15 @@ namespace StrategyEditor.ViewModels
             _trainer = new Trainer(_candlesService, _brokersService);
             var pointsSet = SelectedMLPointsSet;
 
-            //Task.Run(() =>
-           // {
-                _trainer.Train(pointsSet);
-
-               // Dispatcher.Invoke(() =>
-               // {
-                    IsTrainingEnabled = true;
-                    TrainCommand.RaiseCanExecuteChanged();
-              //  });
-           // });
+            _trainer.TrainAsync(pointsSet)
+                .ContinueWith(o =>
+                {
+                    _dispatcher.Invoke(() =>
+                    {
+                        IsTrainingEnabled = true;
+                        TrainCommand.RaiseCanExecuteChanged();
+                    });
+                });
         }
 
         private void ChartClicked((DateTime Time, double Price, Action setIsHandled) o)
@@ -112,6 +118,9 @@ namespace StrategyEditor.ViewModels
         {
             if (_trainer == null) return;
 
+            IsTestEnabled = false;
+            TestCommand.RaiseCanExecuteChanged();
+
             var candles = _candlesService.GetDerivedCandles(
                 _brokersService.GetBroker(SelectedMLPointsSet.Broker),
                 Chart.Market,
@@ -119,7 +128,15 @@ namespace StrategyEditor.ViewModels
 
             if (SelectedMLPointsSet.UseHeikenAshi) candles = candles.CreateHeikinAshiCandles();
 
-            var results = _trainer.Test(candles);
+            var w = _trainer.TestAsync(candles)
+                .ContinueWith(o =>
+                {
+                    _dispatcher.Invoke(() =>
+                    {
+                        IsTestEnabled = true;
+                        TestCommand.RaiseCanExecuteChanged();
+                    });
+                });
         }
 
         private void CreatePoint()
@@ -193,6 +210,7 @@ namespace StrategyEditor.ViewModels
         public ObservableCollection<MLPoint> Points { get; set; } = new ObservableCollection<MLPoint>();
         public bool UseHeikenAshi { get; set; }
         public string Broker { get; set; }
+        public bool GenerateExtraPoints { get; set; } = true;
     }
 
     public class MLPoint
