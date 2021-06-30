@@ -57,14 +57,16 @@
                 </RibbonGroup>
 
                 <RibbonGroup Header="Point group" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.MachineLearning}, Mode=OneWay}">
-                    <RibbonButton Label="Create point group" Command="{Binding Content.DataContext.CreatePointSetCommand, ElementName=MachineLearningView}"/>
-                    <RibbonButton Label="Delete point group" Command="{Binding Content.DataContext.DeletePointSetCommand, ElementName=MachineLearningView}"/>
+                    <RibbonButton Label="Create group" Command="{Binding Content.DataContext.CreatePointSetCommand, ElementName=MachineLearningView}"/>
+                    <RibbonButton Label="Delete group" Command="{Binding Content.DataContext.DeletePointSetCommand, ElementName=MachineLearningView}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="Points" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.MachineLearning}, Mode=OneWay}">
                     <RibbonToggleButton Label="Create point"
                                         Command="{Binding Content.DataContext.CreatePointCommand, ElementName=MachineLearningView}"
                                         IsChecked="{Binding Content.DataContext.CreatingPoint, ElementName=MachineLearningView}"/>
+                    <RibbonButton Label="View point data" Command="{Binding Content.DataContext.ViewPointCommand, ElementName=MachineLearningView}"/>
+                    <RibbonButton Label="Delete point" Command="{Binding Content.DataContext.DeletePointCommand, ElementName=MachineLearningView}"/>
                 </RibbonGroup>
 
                 <RibbonGroup Header="ML" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.MachineLearning}, Mode=OneWay}">

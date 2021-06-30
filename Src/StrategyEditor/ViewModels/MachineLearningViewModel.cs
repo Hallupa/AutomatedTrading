@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Abt.Controls.SciChart.Visuals.Annotations;
 using Hallupa.Library;
 using log4net;
 using Newtonsoft.Json;
@@ -16,6 +17,7 @@ using StrategyEditor.Views;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
 using TraderTools.Core.Extensions;
+using TraderTools.Core.UI;
 using TraderTools.Core.UI.Services;
 
 namespace StrategyEditor.ViewModels
@@ -33,14 +35,23 @@ namespace StrategyEditor.ViewModels
             _dispatcher = Dispatcher;
             DependencyContainer.ComposeParts(this);
             CreatePointCommand = new DelegateCommand(o => CreatePoint());
+            ViewPointCommand = new DelegateCommand(o => ViewPoint());
             CreatePointSetCommand = new DelegateCommand(o => CreatePointSet());
             DeletePointSetCommand = new DelegateCommand(o => DeletePointSet());
+            DeletePointCommand = new DelegateCommand(o => DeletePoint());
             TrainCommand = new DelegateCommand(o => Train(), o => IsTrainingEnabled);
             TestCommand = new DelegateCommand(o => TestModel(), o => IsTestEnabled);
+            MLPointDoubleClickComamnd = new DelegateCommand(o => MLPointDoubleClicked());
             Chart = new MachineLearningChartViewModel();
             _chartClickedDisposable = ChartingService.ChartClickObservable.Subscribe(ChartClicked);
             Load();
         }
+
+        public DelegateCommand MLPointDoubleClickComamnd { get; }
+
+        public DelegateCommand ViewPointCommand { get; }
+
+        public DelegateCommand DeletePointCommand { get; }
 
         public DelegateCommand TestCommand { get; }
 
@@ -75,9 +86,23 @@ namespace StrategyEditor.ViewModels
             set { SetValue(SelectedMLPointsSetProperty, value); }
         }
 
+        public static readonly DependencyProperty SelectedMLPointProperty = DependencyProperty.Register(
+            "SelectedMLPoint", typeof(MLPoint), typeof(MachineLearningViewModel), new PropertyMetadata(default(MLPoint)));
+
+        public MLPoint SelectedMLPoint
+        {
+            get { return (MLPoint) GetValue(SelectedMLPointProperty); }
+            set { SetValue(SelectedMLPointProperty, value); }
+        }
+
         public DelegateCommand CreatePointCommand { get; }
         public DelegateCommand CreatePointSetCommand { get; }
         public DelegateCommand DeletePointSetCommand { get; }
+
+        private void MLPointDoubleClicked()
+        {
+            ViewPoint();
+        }
 
         private void Train()
         {
@@ -114,6 +139,19 @@ namespace StrategyEditor.ViewModels
             }
         }
 
+        private void ViewPoint()
+        {
+            if (SelectedMLPoint == null || SelectedMLPointsSet == null) return;
+
+            var dataGenerator = new DataGenerator(_candlesService, _brokersService);
+            var xy = dataGenerator.GetPointXYData(SelectedMLPoint, SelectedMLPointsSet);
+
+            Log.Info($"Point X data: {string.Join(", ", xy.x.Select(v => $"{v:0.00}"))}");
+
+            Chart.ChartViewModel.ChartPaneViewModels.Clear();
+            ChartHelper.SetChartViewModelPriceData(xy.candlesUsed, Chart.ChartViewModel, "ML point");
+        }
+
         private void TestModel()
         {
             if (_trainer == null) return;
@@ -131,10 +169,29 @@ namespace StrategyEditor.ViewModels
             var w = _trainer.TestAsync(candles)
                 .ContinueWith(o =>
                 {
+                    var results = o.Result;
                     _dispatcher.Invoke(() =>
                     {
                         IsTestEnabled = true;
                         TestCommand.RaiseCanExecuteChanged();
+
+                        if (Chart.ChartViewModel.ChartPaneViewModels.Count == 0) return;
+
+                        if (Chart.ChartViewModel.ChartPaneViewModels[0].TradeAnnotations == null)
+                        {
+                            Chart.ChartViewModel.ChartPaneViewModels[0].TradeAnnotations = new AnnotationCollection();
+                        }
+
+                        var annotations = new AnnotationCollection();
+                        foreach (var r in results)
+                        {
+                            ChartHelper.AddBuySellMarker(
+                                r.Direction, annotations, null, 
+                                new DateTime(r.DateTime, DateTimeKind.Utc).ToLocalTime(), r.Price,
+                                true, true);
+                        }
+
+                        Chart.ChartViewModel.ChartPaneViewModels[0].TradeAnnotations = annotations;
                     });
                 });
         }
@@ -200,6 +257,14 @@ namespace StrategyEditor.ViewModels
 
             MLPointSets.Remove(SelectedMLPointsSet);
             SelectedMLPointsSet = MLPointSets.FirstOrDefault();
+            Save();
+        }
+
+        private void DeletePoint()
+        {
+            if (SelectedMLPointsSet == null || SelectedMLPoint == null) return;
+
+            SelectedMLPointsSet.Points.Remove(SelectedMLPoint);
             Save();
         }
     }
