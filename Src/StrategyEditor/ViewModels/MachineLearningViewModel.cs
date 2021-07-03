@@ -187,7 +187,7 @@ namespace StrategyEditor.ViewModels
                         {
                             ChartHelper.AddBuySellMarker(
                                 r.Direction, annotations, null, 
-                                new DateTime(r.DateTime, DateTimeKind.Utc).ToLocalTime(), r.Price,
+                                new DateTime(r.DateTime, DateTimeKind.Utc), r.Price,
                                 true, true);
                         }
 

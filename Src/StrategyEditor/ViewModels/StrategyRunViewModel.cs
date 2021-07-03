@@ -240,7 +240,7 @@ namespace StrategyEditor.ViewModels
                }));
 
                 var strategy = (StrategyBase)Activator.CreateInstance(_strategyType);
-                var runner = new StrategyRunner(_candlesService, _brokersService.GetBroker(strategy.Broker), 10000M, transactionFee: strategy.Commission);
+                var runner = new StrategyRunner(_candlesService, _brokersService.GetBroker(strategy.Broker), 10000M);
                 var trades = runner.Run(
                     strategy,
                     () => _stopRun);

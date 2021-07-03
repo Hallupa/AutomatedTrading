@@ -15,7 +15,7 @@ namespace StrategyEditor.Services
     [PartCreationPolicy(CreationPolicy.Shared)]
     public class UIService : DependencyObject, INotifyPropertyChanged
     {
-        private DisplayPages _selectedDisplayPage = DisplayPages.RunCustomStrategy;
+        private DisplayPages _selectedDisplayPage = DisplayPages.RunStrategy;
         private Subject<UIService> _viewTradeObservable;
         private Subject<UIService> _viewTradeSetupObservable;
         private List<Action> _f5Actions = new List<Action>();

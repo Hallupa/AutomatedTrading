@@ -24,9 +24,10 @@ namespace StrategyEditor.ViewModels
 {
     public enum DisplayPages
     {
-        RunCustomStrategy,
-        RunStrategyResults,
-        RunStrategyResultsChart,
+        RunStrategy,
+        StrategyViewTrade,
+        StrategyEquity,
+        StrategyViewAllTrades,
         MachineLearning
     }
 
