@@ -1,7 +1,9 @@
+Note this project is a work-in-progress - there's still lots to be done
+
 # Trade Bot designer and runner
 
-This is created in C# in Visual Studio 2019. It is an experimental work-in-progress to create an application to design spread betting trading bots and run them live against FXCM.
-I've been creating this to design and run my own trading strategies.
+This is created in C# in Visual Studio 2019. It is an experimental work-in-progress to create an application to design crypto or spread betting trading bots.
+It also will run then live (Currently only with FXCM).
 
 ## Project aims
 1. Create high performance desktop applicate
@@ -15,7 +17,7 @@ I've been creating this to design and run my own trading strategies.
 9. Add machine learning support
 
 ## Progress so far
-From the project aims, I have everything above 1-9 done in a basic form. Below are screenshots of progress so far. This is still highly experimental.
+This is still highly experimental but a lot of work has been done so far.
 
 At present I'm just focusing on making this useful for me but if others are interested in this also, I will take feedback and maybe add an installer.
 Any feedback or ideas are welcome!
@@ -30,6 +32,14 @@ The log at the bottom of the screenshot demonstrates  just how fast a strategy c
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/TradeChart.png)
 This shows all the trades found for the strategy - these can then be shown on the trade chart.
 
+## View all trades
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/ViewAllTrades.png)
+View all trades on a single chart.
+
 ## Equity chart
 ![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/EquityResults.png)
 This is the chart of equity over the time of the simulated trades. This is the random trades strategy which results in the account dropping to zero.
+
+## Machine learning
+![Screenshot](https://github.com/Hallupa/AutomatedTrading/blob/master/Docs/Images/MachineLearning.png)
+Set points of interest on the chart which will then feed into the TensorFlow machine learning, which will use a neural network to learn the data.
