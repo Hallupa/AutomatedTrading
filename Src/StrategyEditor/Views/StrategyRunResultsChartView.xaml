@@ -4,10 +4,10 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:s="http://schemas.abtsoftware.co.uk/scichart"
-      xmlns:chartModifiers="clr-namespace:TraderTools.Core.UI.ChartModifiers;assembly=TraderTools.Core.UI"
-      xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
       xmlns:converters="clr-namespace:Hallupa.Library.UI.Converters;assembly=Hallupa.Library.UI"
       xmlns:ui="clr-namespace:Hallupa.Library.UI;assembly=Hallupa.Library.UI"
+      xmlns:chartModifiers="clr-namespace:TraderTools.Core.UI.ChartModifiers;assembly=Hallupa.TraderTools.Core.UI"
+      xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=Hallupa.TraderTools.Core.UI"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="StrategyRunResultsChartView">

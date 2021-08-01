@@ -3,8 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:charting="clr-namespace:TraderTools.Core.UI;assembly=TraderTools.Core.UI"
-      xmlns:views1="clr-namespace:TraderTools.Core.UI.Views;assembly=TraderTools.Core.UI"
+      xmlns:views="clr-namespace:TraderTools.Core.UI.Views;assembly=Hallupa.TraderTools.Core.UI"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="StrategyRunResultsView">
@@ -16,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Column="0" Grid.Row="0">
-            <views1:ChartView DataContext="{Binding ChartViewModel}"/>
+            <views:ChartView DataContext="{Binding ChartViewModel}"/>
         </Grid>
 
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Grid.Column="0" VerticalAlignment="Center" Height="7" Margin="1" />
@@ -30,10 +29,10 @@
 
             <TabControl Grid.Row="1">
                 <TabItem Header="Trades">
-                    <views1:TradeListControl DataContext="{Binding TradesViewModel}"/>
+                    <views:TradeListControl DataContext="{Binding TradesViewModel}"/>
                 </TabItem>
                 <TabItem Header="Results">
-                    <views1:TradesResultsControl DataContext="{Binding ResultsViewModel}"/>
+                    <views:TradesResultsControl DataContext="{Binding ResultsViewModel}"/>
                 </TabItem>
             </TabControl>
         </Grid>
