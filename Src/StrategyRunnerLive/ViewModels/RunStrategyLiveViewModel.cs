@@ -8,6 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Hallupa.Library;
+using Hallupa.TraderTools.Basics;
+using Hallupa.TraderTools.Brokers.Binance;
+using Hallupa.TraderTools.Simulation;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
@@ -20,11 +23,9 @@ namespace StrategyRunnerLive.ViewModels
     public class RunStrategyLiveViewModel
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private FxcmBroker _fxcm;
         private bool _runningLive = false;
         private string _strategiesDirectory;
         private string _logDirectory;
-        private IBrokerAccount _brokerAccount;
 
         [Import] private IBrokersService _brokersService;
         [Import] private IDataDirectoryService _dataDirectoryService;
@@ -37,11 +38,9 @@ namespace StrategyRunnerLive.ViewModels
             DependencyContainer.ComposeParts(this);
 
             RunLiveCommand = new DelegateCommand(o => RunLive());
-            _fxcm = (FxcmBroker)_brokersService.Brokers.First(x => x.Name == "FXCM");
             _strategiesDirectory = _dataDirectoryService.MainDirectoryWithApplicationName;
-            _logDirectory = DataDirectoryService.GetMainDirectoryWithApplicationName("FXCMTradeLog");
+            _logDirectory = DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog");
             _brokersService.LoadBrokerAccounts(_tradeDetailsAutoCalculatorService, _logDirectory);
-            _brokerAccount = _brokersService.AccountsLookup[_fxcm];
         }
 
         public DelegateCommand RunLiveCommand { get; }
@@ -50,11 +49,11 @@ namespace StrategyRunnerLive.ViewModels
 
         private void RunLive()
         {
-            if (_fxcm.Status != ConnectStatus.Connected)
+            /*if (_fxcm.Status != ConnectStatus.Connected)
             {
                 MessageBox.Show(Application.Current.MainWindow, "FXCM not connected", "Cannot run live");
                 return;
-            }
+            }*/
 
             if (string.IsNullOrEmpty(SelectedStrategyFilename))
             {
@@ -84,194 +83,98 @@ namespace StrategyRunnerLive.ViewModels
             });
         }
 
-        private Dictionary<string, object> _marketLock = new Dictionary<string, object>();
 
         private void RunLive(string selectedStrategyFilename)
         {
             var trades = new TradeWithIndexingCollection();
-            var strategyLookup = new Dictionary<string, StrategyBase>();
             var candlesLookup = new Dictionary<string, TimeframeLookup<List<Candle>>>();
             var accountSaveIntervalSeconds = 60;
-            var accountLastSaveTime = DateTime.UtcNow;
 
             Log.Info("Running live");
 
             // Get strategy type and markets
-            var strategyType = CompileStrategyAndGetStrategyMarkets(selectedStrategyFilename, out var markets, out var timeframes);
+            var strategyType = CompileStrategyAndGetStrategyMarkets(selectedStrategyFilename);
             if (strategyType == null) return;
 
-            // Update broker account
-            Log.Info("Updating broker account");
-            _brokerAccount.UpdateBrokerAccount(_fxcm, _candlesService, _marketDetailsService, _tradeDetailsAutoCalculatorService, UpdateOption.ForceUpdate);
+            var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
+
+            // Get broker and broker account
+            var broker = (BinanceBroker)_brokersService.Brokers.First(x => x.Name == strategy.Broker);
+
 
             // Get candles
             Log.Info("Getting candles");
-            foreach (var m in markets)
+            foreach (var m in strategy.Markets)
             {
                 candlesLookup[m] = new TimeframeLookup<List<Candle>>();
 
-                foreach (var t in timeframes)
+                foreach (var t in strategy.Timeframes)
                 {
-                    candlesLookup[m].Add(t, _candlesService.GetCandles(_fxcm, m, t, true, forceUpdate: true, cacheData: true));
+                    candlesLookup[m].Add(t,
+                        _candlesService.GetCandles(broker, m, t, true, forceUpdate: true, cacheData: true)
+                            .Where(c => c.IsComplete == 1)
+                            .ToList());
                 }
             }
 
-            // Setup locks
-            foreach (var market in markets)
-            {
-                _marketLock[market] = new object();
-            }
+
 
             // Create strategies
-            Log.Info("Setting up strategies");
-            foreach (var market in markets)
+            strategy.SetSimulationParameters(trades, candlesLookup);
+            strategy.SetInitialised(
+                true,
+                () => broker.GetBalance(),
+                (indexing, trade, arg3) => { },
+                broker, 
+                _brokersService);
+
+
+            // Update indicators
+            // TODO
+
+            strategy.UpdateBalances();
+            strategy.Starting();
+
+            Log.Info("Running main processing loop");
+            while (true)
             {
-                var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
-                var currentCandles = new TimeframeLookup<List<Candle>>();
-                strategy.SetSimulationParameters(trades, currentCandles, _marketDetailsService.GetMarketDetails("FXCM", market));
-                strategyLookup.Add(market, strategy);
 
-                // Setup candles for strategy
-                foreach (var t in timeframes)
+
+                // Update candles
+                var addedCandles = new List<AddedCandleTimeframe>();
+                foreach (var m in strategy.Markets)
                 {
-                    currentCandles.Add(t, candlesLookup[market][t].Where(c => c.IsComplete == 1).ToList());
-                }
-            }
-
-            // Get live prices steams
-            var priceMonitor = new MonitorLivePrices(_fxcm, p => ProcessNewPrice(markets, timeframes, p, candlesLookup));
-
-            try
-            {
-                var checkFxcmConnectedIntervalSeconds = 60 * 5;
-                var nextFxcmConnectedCheckTime = DateTime.UtcNow.AddSeconds(checkFxcmConnectedIntervalSeconds);
-
-                Log.Info("Running main processing loop");
-                while (true)
-                {
-                    if (accountLastSaveTime < DateTime.UtcNow.AddSeconds(-accountSaveIntervalSeconds))
+                    foreach (var t in strategy.Timeframes)
                     {
-                        lock (_brokerAccount)
+                        var candles = _candlesService.GetCandles(broker, m, t, true, forceUpdate: true)
+                            .Where(c => c.IsComplete == 1)
+                            .ToList();
+
+                        if (candlesLookup[m][t].Count < candles.Count)
                         {
-                            Log.Debug("Saving broker account");
-                            _brokerAccount.SaveAccount(
-                                DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog"));
-                        }
-
-                        accountLastSaveTime = DateTime.UtcNow;
-                    }
-
-                    // Re-connect if connect is lost
-                    if (DateTime.UtcNow >= nextFxcmConnectedCheckTime)
-                    {
-                        nextFxcmConnectedCheckTime = DateTime.UtcNow.AddSeconds(checkFxcmConnectedIntervalSeconds);
-                        if (_fxcm.Status == ConnectStatus.Disconnected)
-                        {
-                            Log.Warn("FXCM has disconnected - reconnecting");
-                            try
+                            for (var i = candlesLookup[m][t].Count; i < candles.Count; i++)
                             {
-                                priceMonitor?.Dispose();
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error("Unable to dispose price monitor", ex);
-                            }
-
-                            priceMonitor = null;
-
-                            _fxcm.Connect();
-
-                            if (_fxcm.Status == ConnectStatus.Connected)
-                            {
-                                Log.Warn($"FXCM has reconnected");
-                                priceMonitor = new MonitorLivePrices(_fxcm, p => ProcessNewPrice(markets, timeframes, p, candlesLookup));
-                            }
-                            else
-                            {
-                                Log.Warn($"FXCM hasn't re-connected - new status is: {_fxcm.Status}");
+                                candlesLookup[m][t].Add(candles[i]);
+                                addedCandles.Add(new AddedCandleTimeframe(m, t, candles[i]));
                             }
                         }
                     }
-
-                    foreach (var strategy in strategyLookup.Values)
-                    {
-                        var newTimeframeCandles = new List<Timeframe>();
-
-                        // Check if there is any new complete candles
-                        foreach (var t in strategy.Timeframes)
-                        {
-                            lock (candlesLookup[strategy.Market.Name][t])
-                            {
-                                if (strategy.Candles[t].Count !=
-                                    candlesLookup[strategy.Market.Name][t].Count(c => c.IsComplete == 1))
-                                {
-                                    newTimeframeCandles.Add(t);
-                                    strategy.Candles[t].Clear();
-                                    strategy.Candles[t].AddRange(candlesLookup[strategy.Market.Name][t]
-                                        .Where(c => c.IsComplete == 1).ToList());
-                                }
-                            }
-                        }
-
-                        if (newTimeframeCandles.Any()) // TODO reduce times this is called and include save
-                        {
-                            // Update broker account
-                            lock (_brokerAccount)
-                            {
-                                Log.Debug("Updating and saving broker account");
-                                _brokerAccount.UpdateBrokerAccount(_fxcm, _candlesService, _marketDetailsService,
-                                    _tradeDetailsAutoCalculatorService, UpdateOption.ForceUpdate);
-                            }
-
-                            var s = strategy;
-                            Task.Run(() =>
-                            {
-                                if (Monitor.TryEnter(_marketLock[s.Market.Name]))
-                                {
-                                    try
-                                    {
-                                        Log.Info($"Found new candles for market: {s.Market.Name}");
-
-                                        // Update indicators and do trades maintenance
-                                        s.UpdateIndicators(newTimeframeCandles);
-                                        s.NewTrades.Clear();
-                                        s.Trades.MoveTrades();
-
-                                        var beforeStopLossLookup =
-                                            s.Trades.OpenTrades.ToDictionary(x => x.Trade.Id, x => x.Trade.StopPrice);
-
-                                        // Process strategy
-                                        s.ProcessCandles(newTimeframeCandles);
-
-                                        // Create any new trades
-                                        CreateNewFXCMTradesAndUpdateAccount(s);
-
-                                        if (trades.OpenTrades.Count() > 5)
-                                        {
-                                            Log.Error("Too many trades");
-                                        }
-
-                                        // Update any stops
-                                        UpdateFXCMOpenTradesStops(s, beforeStopLossLookup);
-
-                                    }
-                                    finally
-                                    {
-                                        Monitor.Exit(_marketLock[s.Market.Name]);
-                                    }
-                                }
-                            });
-                        }
-                    }
-
-                    Thread.Sleep(100);
                 }
 
+                if (addedCandles.Any()) // TODO reduce times this is called and include save
+                {
+                    // Update broker account
+                    Log.Debug("Updating and saving broker account");
+
+                    // Update strategy
+                    strategy.UpdateIndicators(addedCandles);
+                    strategy.UpdateBalances();
+                    strategy.ProcessCandles(addedCandles);
+                }
+
+                Thread.Sleep(10000);
             }
-            finally
-            {
-                priceMonitor.Dispose();
-            } }
+        }
 
         private static void ProcessNewPrice(string[] markets, Timeframe[] timeframes,
             (string Instrument, double Bid, double Ask, DateTime Time) p, Dictionary<string, TimeframeLookup<List<Candle>>> candles)
@@ -345,11 +248,8 @@ namespace StrategyRunnerLive.ViewModels
             }
         }
 
-        private Type CompileStrategyAndGetStrategyMarkets(string selectedStrategyFilename, out string[] markets, out Timeframe[] timeframes)
+        private Type CompileStrategyAndGetStrategyMarkets(string selectedStrategyFilename)
         {
-            markets = null;
-            timeframes = null;
-
             // Compile strategy
             var code = File.ReadAllText(Path.Combine(_strategiesDirectory, $"{selectedStrategyFilename}.txt"));
             var strategyType = StrategyHelper.CompileStrategy(code);
@@ -360,13 +260,10 @@ namespace StrategyRunnerLive.ViewModels
                 return strategyType;
             }
 
-            // Get markets
-            markets = StrategyHelper.GetStrategyMarkets(strategyType);
-            timeframes = GetStrategyTimeframes(strategyType);
             return strategyType;
         }
 
-
+        /*
         private void UpdateFXCMOpenTradesStops(StrategyBase strategy, Dictionary<string, decimal?> beforeStopLossLookup)
         {
             foreach (var t in strategy.Trades.OpenTrades.Where(x => strategy.NewTrades.All(z => z.Id != x.Trade.Id)))
@@ -417,6 +314,6 @@ namespace StrategyRunnerLive.ViewModels
         {
             var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
             return strategy.Timeframes;
-        }
+        }*/
     }
 }

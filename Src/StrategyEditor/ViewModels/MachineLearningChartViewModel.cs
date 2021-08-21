@@ -5,9 +5,9 @@ using System.Linq;
 using System.Windows.Threading;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Hallupa.Library;
+using Hallupa.TraderTools.Brokers.Binance;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
-using TraderTools.Brokers.Binance;
 using TraderTools.Core.Extensions;
 using TraderTools.Core.UI;
 

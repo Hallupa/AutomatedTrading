@@ -3,7 +3,9 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Hallupa.Library;
+using Hallupa.TraderTools.Brokers.Binance;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
@@ -19,6 +21,9 @@ namespace StrategyRunnerLive.ViewModels
 
         [Import] private IBrokersService _brokersService;
         [Import] private IDataDirectoryService _dataDirectoryService;
+        [Import] private IBrokersCandlesService _candlesService;
+        [Import] private IMarketDetailsService _marketDetailsService;
+        [Import] private ITradeDetailsAutoCalculatorService _tradeDetailsAutoCalculatorService;
 
         private string _selectedStrategyFilename;
 
@@ -30,16 +35,36 @@ namespace StrategyRunnerLive.ViewModels
 
             _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
 
+            var binance = new BinanceBroker("TODO", "TODO");
+
             // Setup brokers
             var brokers = new IBroker[]
             {
                 _fxcm = new FxcmBroker
                 {
                     IncludeReportInUpdates = false
-                }
+                },
+                binance
             };
 
             _brokersService.AddBrokers(brokers);
+
+            var logDirectory = DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog");
+            _brokersService.LoadBrokerAccounts(_tradeDetailsAutoCalculatorService, logDirectory);
+
+            var account = _brokersService.AccountsLookup[binance];
+
+            Task.Run(() =>
+            {
+                // TODO - threading
+                /*account.UpdateBrokerAccount(
+                    binance,
+                    _candlesService,
+                    _marketDetailsService,
+                    _tradeDetailsAutoCalculatorService);
+                account.SaveAccount(DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog"));*/
+
+            });
 
             RunStrategyLiveViewModel = new RunStrategyLiveViewModel();
 

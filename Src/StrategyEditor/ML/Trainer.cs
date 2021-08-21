@@ -6,14 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using log4net;
-using NumSharp;
 using StrategyEditor.ViewModels;
 using Tensorflow;
 using static Tensorflow.KerasApi;
+using static Tensorflow.Binding;
 using Tensorflow.Keras;
 using Tensorflow.Keras.ArgsDefinition;
 using Tensorflow.Keras.Engine;
 using Tensorflow.Keras.Layers;
+using Tensorflow.NumPy;
 using TraderTools.Basics;
 
 namespace StrategyEditor.ML
@@ -58,6 +59,10 @@ namespace StrategyEditor.ML
 
             new Thread(new ThreadStart(() =>
             {
+                //      if (!tf.executing_eagerly())
+              //           tf.enable_eager_execution();
+               // tf.Context.ensure_initialized();
+
                 _modelDispatcher = Dispatcher.CurrentDispatcher;
                 dispatcherReadyEvent.Set();
                 Dispatcher.Run();
@@ -105,7 +110,8 @@ namespace StrategyEditor.ML
 
                 var inX = np.array(x.ToArray());
                 var countIn = (int)(x.Count / (decimal)xpoints);
-                inX = inX.reshape(countIn, xpoints);
+
+                inX = inX.reshape(new int[] { countIn, xpoints });
 
                 var outY = _model.predict(inX, countIn);
                 for (var i = 0; i < countIn; i++)
@@ -139,14 +145,15 @@ namespace StrategyEditor.ML
             {
                 _modelDispatcher.Invoke(() =>
                 {
+                    tf.Context.ensure_initialized();
                     Log.Info("Training");
                     var xydata = _dataGenerator.GetPointsXYData(points);
 
                     var x = np.array(xydata.x.ToArray());
                     var y = np.array(xydata.y.ToArray());
                     var count = (int)(xydata.x.Count / (decimal)xydata.dataItemsPerX);
-                    x = x.reshape(count, xydata.dataItemsPerX);
-                    y = y.reshape(count, 3);
+                    x = x.reshape(new int[] { count, xydata.dataItemsPerX });
+                    y = y.reshape(new int[] { count, 3 });
 
                     //Tensorflow.InvalidArgumentError: 'In[0] mismatch In[1] shape: 28 vs. 1120: [5,28] [1120,60] 0 0'
                     /*_model = keras.Sequential(
@@ -154,7 +161,7 @@ namespace StrategyEditor.ML
                         {
                             new Flatten(new FlattenArgs
                             {
-                                InputShape = new TensorShape(xydata.dataItemsPerX)
+                                InputShape = new Shape(new [] { xydata.dataItemsPerX })
                             }),
                             //keras.layers.Flatten(),
                             keras.layers.Dense(xydata.dataItemsPerX, activation: "relu"),//, input_shape: new TensorShape(-1, xydata.dataItemsPerX)),
@@ -162,17 +169,19 @@ namespace StrategyEditor.ML
                             keras.layers.Dense(40, activation: "relu"),
                             keras.layers.Dense(3, activation: "softmax"),
                         });
-                    
-                                         _model.compile(keras.optimizers.SGD(0.01F), keras.losses.CategoricalCrossentropy(from_logits: true),
-                    */
 
+                    _model.compile(keras.optimizers.SGD(0.01F), keras.losses.CategoricalCrossentropy(from_logits: true));*/
+                    
+
+                    /*   CategoricalCrossentropy */
+                    
                     var numberOfClasses = 3;
                     _model = keras.Sequential(
                         new List<ILayer>
                         {
                             new Flatten(new FlattenArgs
                             {
-                                InputShape = new TensorShape(xydata.dataItemsPerX)
+                                InputShape = new Shape(xydata.dataItemsPerX)
                             }),
                             //keras.layers.Flatten(),
                             keras.layers.Dense(xydata.dataItemsPerX, activation: "relu"),//, input_shape: new TensorShape(-1, xydata.dataItemsPerX)),
@@ -194,7 +203,7 @@ namespace StrategyEditor.ML
                         keras.losses.CategoricalCrossentropy(),
                         new[] { "acc" });
 
-                    //here // SparseCategoricalCrossentropy?  Validation set? More generated data?
+                    //here // SparseCategoricalCrossentropy?  Validation set? More generated data?*/
 
                     _model.fit(x, y, 5, 100, 1, validation_split: 0.1F);
                     Log.Info("Training complete");

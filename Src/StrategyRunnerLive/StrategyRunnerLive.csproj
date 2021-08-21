@@ -7,22 +7,33 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="3.1.0" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
     <PackageReference Include="Microsoft.Windows.Compatibility.Shims" Version="2.0.1" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\Src\Library.UI\Library.UI.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\Library.UI\Library.UI.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\Library\Library.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Basics\TraderTools.Basics.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Brokers.Binance\TraderTools.Brokers.Binance.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Core\TraderTools.Core.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+
+
+    <!--<ProjectReference Include="..\..\Common\Src\Library.UI\Library.UI.csproj" />
     <ProjectReference Include="..\..\Common\Src\Library\Library.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Basics\TraderTools.Basics.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Core\TraderTools.Core.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
-    <ProjectReference Include="..\..\Common\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>

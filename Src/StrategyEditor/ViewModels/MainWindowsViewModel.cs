@@ -7,13 +7,14 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CryptoTrader;
 using StrategyEditor.Services;
 using Hallupa.Library;
+using Hallupa.TraderTools.Brokers.Binance;
 using log4net;
 using StrategyEditor.Views;
 using TraderTools.Basics;
 using TraderTools.Basics.Helpers;
-using TraderTools.Brokers.Binance;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Core.UI.Services;
@@ -59,7 +60,7 @@ namespace StrategyEditor.ViewModels
             var brokers = new IBroker[]
             {
                 new FxcmBroker(),
-                new BinanceBroker("TODO", "TODO"), 
+                new BinanceBroker("TODO", "TODO"),
             };
 
             // Setup brokers and load accounts
@@ -86,66 +87,24 @@ namespace StrategyEditor.ViewModels
         private void UpdateFXCandles(object obj)
         {
             if (_updatingCandles) return;
-            if (string.IsNullOrEmpty(_uiService.SelectedStrategyFilename))
-            {
-                MessageBox.Show("Select strategy to update candles");
-                return;
-            }
-
-            var strategyType = StrategyHelper.CompileStrategy(_uiService.SelectedCodeText);
-            if (strategyType == null)
-            {
-                MessageBox.Show("Unable to compile strategy");
-                return;
-            }
-
-            var strategy = (StrategyBase)Activator.CreateInstance(strategyType);
-
-            _updatingCandles = true;
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var fxcm = _brokersService.Brokers.First(x => x.Name == "FXCM");
-            var timeframes = strategy.Timeframes.Union(new[] { Timeframe.M1 }).ToArray();
-            var markets = strategy.Markets;
+            _updatingCandles = true;
 
-            if (markets == null)
-            {
-                markets = StrategyBase.GetDefaultMarkets();
-            }
+            var candleUpdater = new BinanceCandlesUpdater(
+                (BinanceBroker) _brokersService.Brokers.First(b => b.Name == "Binance"),
+                _candleService,
+                _marketDetailsService);
 
-            var view = new ProgressView { Owner = Application.Current.MainWindow };
-            view.TextToShow.Text = "Updating candles";
-
-            Task.Run(() =>
-            {
-                try
-                {
-                    CandlesHelper.UpdateCandles(
-                        fxcm,
-                        _candleService,
-                        markets,
-                        timeframes,
-                        updateProgressAction: s =>
+            candleUpdater
+                .RunAsync()
+                .ContinueWith(
+                    t => Task.Run(() =>
+                    {
+                        dispatcher.Invoke(() =>
                         {
-                            _dispatcher.BeginInvoke((Action)(() =>
-                           {
-                               view.TextToShow.Text = s;
-                           }));
+                            _updatingCandles = false;
                         });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Unable to update candles", ex);
-                }
-
-                dispatcher.Invoke(() =>
-                {
-                    view.Close();
-                    MessageBox.Show("Updating candles complete");
-                    _updatingCandles = false;
-                });
-            });
-
-            view.ShowDialog();
+                    }));
         }
 
         #endregion
