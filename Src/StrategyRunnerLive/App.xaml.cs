@@ -29,19 +29,33 @@ namespace StrategyRunnerLive
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+            try
+            {
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-            Log.Info("Starting application");
+                Log.Info("Starting application");
 
-            DependencyContainer.AddAssembly(typeof(App).Assembly);
-            DependencyContainer.AddAssembly(typeof(BrokersService).Assembly);
-            DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
-            DependencyContainer.AddAssembly(typeof(ModelPredictorService).Assembly);
+                DependencyContainer.AddAssembly(typeof(App).Assembly);
+                DependencyContainer.AddAssembly(typeof(BrokersService).Assembly);
+                DependencyContainer.AddAssembly(typeof(ChartingService).Assembly);
+                DependencyContainer.AddAssembly(typeof(ModelPredictorService).Assembly);
 
-            DependencyContainer.ComposeParts(this);
+                DependencyContainer.ComposeParts(this);
 
-            _dataDirectoryService.SetApplicationName("AutomatedTrader");
+                _dataDirectoryService.SetApplicationName("AutomatedTrader");
+
+                Log.Info($"Using main directory: {_dataDirectoryService.MainDirectoryWithApplicationName}");
+                if (!Directory.Exists(_dataDirectoryService.MainDirectoryWithApplicationName))
+                {
+                    Directory.CreateDirectory(_dataDirectoryService.MainDirectoryWithApplicationName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Failed on startup", ex);
+                throw;
+            }
         }
     }
 }

@@ -35,6 +35,6 @@
             </RibbonTab>
         </Ribbon>
 
-        <ui:LogControl Grid.Row="1" ShowExpanded="True" ShowToggleButton="False" LogRowHeight="*"/>
+        <ui:LogControl Grid.Row="1" ShowExpanded="True" ShowToggleButton="False"/>
     </Grid>
 </Window>

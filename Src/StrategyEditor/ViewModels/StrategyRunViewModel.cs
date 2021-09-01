@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,8 @@ using System.Windows.Threading;
 using StrategyEditor.Services;
 using Hallupa.Library;
 using Hallupa.Library.UI.Views;
+using Hallupa.TraderTools.Basics;
+using Hallupa.TraderTools.Simulation;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Core.UI.ViewModels;
@@ -63,6 +66,14 @@ namespace StrategyEditor.ViewModels
             _broker = _brokersService.GetBroker("FXCM");
 
             _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
+            try
+            {
+                var customDir = ConfigurationManager.AppSettings["CustomStrategiesDirectory"];
+                if (!string.IsNullOrEmpty(customDir)) _strategiesDirectory = customDir;
+            }
+            catch (Exception)
+            {
+            }
 
             if (!Directory.Exists(_strategiesDirectory))
             {
@@ -136,7 +147,7 @@ namespace StrategyEditor.ViewModels
                 return;
             }
 
-            var path = Path.Combine(_strategiesDirectory, $"{SelectedStrategyFilename}.txt");
+            var path = Path.Combine(_strategiesDirectory, $"{SelectedStrategyFilename}.cs");
             File.Delete(path);
 
             SelectedStrategyFilename = string.Empty;
@@ -193,18 +204,18 @@ namespace StrategyEditor.ViewModels
                 });
 
                 var code = CodeText;
-                byte[] hash = null;
+                /*byte[] hash = null;
                 using (var sha256Hash = SHA256.Create())
                 {
                     hash = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(code));
-                }
+                }*/
 
-                if (_strategyHash == null || !_strategyHash.SequenceEqual(hash))
+                //if (_strategyHash == null || !_strategyHash.SequenceEqual(hash))
                 {
-                    _strategyHash = hash;
+                    //_strategyHash = hash;
                     Log.Info("Compiling strategy");
 
-                    _strategyType = StrategyHelper.CompileStrategy(code);
+                    _strategyType = StrategyHelper.CompileStrategy(code, Path.Combine(_strategiesDirectory, $"{_selectedStrategyFilename}.cs"));
                     Log.Info("Compilation complete");
                 }
 
@@ -240,7 +251,14 @@ namespace StrategyEditor.ViewModels
                }));
 
                 var strategy = (StrategyBase)Activator.CreateInstance(_strategyType);
-                var runner = new StrategyRunner(_candlesService, _brokersService.GetBroker(strategy.Broker), 10000M);
+                var runner = new StrategyRunner(
+                    _candlesService,
+                    _brokersService.GetBroker(strategy.Broker),
+                    new List<AssetBalance>
+                    {
+                        new AssetBalance("USDT", 10000)
+                    },
+                    _brokersService);
                 var trades = runner.Run(
                     strategy,
                     () => _stopRun);
@@ -301,7 +319,7 @@ namespace StrategyEditor.ViewModels
         private void RefreshStrategyFilenames()
         {
             StrategyFilenames.Clear();
-            var strategyPaths = Directory.GetFiles(_strategiesDirectory, "*.txt");
+            var strategyPaths = Directory.GetFiles(_strategiesDirectory, "*.cs");
             foreach (var strategyPath in strategyPaths)
             {
                 StrategyFilenames.Add(Path.GetFileNameWithoutExtension(strategyPath));
@@ -316,7 +334,7 @@ namespace StrategyEditor.ViewModels
 
             if (res.OKClicked && !string.IsNullOrEmpty(res.Text))
             {
-                var path = Path.Combine(_strategiesDirectory, $"{res.Text}.txt");
+                var path = Path.Combine(_strategiesDirectory, $"{res.Text}.cs");
                 File.WriteAllText(path, _defaultStrategyText);
 
                 RefreshStrategyFilenames();
@@ -337,7 +355,7 @@ namespace StrategyEditor.ViewModels
 
                 if (!string.IsNullOrEmpty(_selectedStrategyFilename))
                 {
-                    var code = File.ReadAllText(Path.Combine(_strategiesDirectory, $"{_selectedStrategyFilename}.txt"));
+                    var code = File.ReadAllText(Path.Combine(_strategiesDirectory, $"{_selectedStrategyFilename}.cs"));
                     CodeText = code;
                 }
                 else
@@ -353,7 +371,7 @@ namespace StrategyEditor.ViewModels
         {
             if (!string.IsNullOrEmpty(SelectedStrategyFilename))
             {
-                var path = Path.Combine(_strategiesDirectory, $"{SelectedStrategyFilename}.txt");
+                var path = Path.Combine(_strategiesDirectory, $"{SelectedStrategyFilename}.cs");
 
                 if (File.Exists(path))
                 {

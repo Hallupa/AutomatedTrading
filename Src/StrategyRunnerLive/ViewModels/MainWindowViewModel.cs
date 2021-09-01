@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using Hallupa.Library;
 using Hallupa.TraderTools.Brokers.Binance;
 using log4net;
+using Microsoft.Extensions.Configuration;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
@@ -31,46 +33,54 @@ namespace StrategyRunnerLive.ViewModels
         {
             Log.Info("Application started");
 
-            DependencyContainer.ComposeParts(this);
-
-            _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
-
-            var binance = new BinanceBroker("TODO", "TODO");
-
-            // Setup brokers
-            var brokers = new IBroker[]
+            try
             {
-                _fxcm = new FxcmBroker
+                DependencyContainer.ComposeParts(this);
+
+                _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
+
+                var binance = new BinanceBroker();
+
+                // Setup brokers
+                var brokers = new IBroker[]
                 {
-                    IncludeReportInUpdates = false
-                },
-                binance
-            };
+                    _fxcm = new FxcmBroker
+                    {
+                        IncludeReportInUpdates = false
+                    },
+                    binance
+                };
 
-            _brokersService.AddBrokers(brokers);
+                _brokersService.AddBrokers(brokers);
 
-            var logDirectory = DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog");
-            _brokersService.LoadBrokerAccounts(_tradeDetailsAutoCalculatorService, logDirectory);
+                var logDirectory = DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog");
+                _brokersService.LoadBrokerAccounts(_tradeDetailsAutoCalculatorService, logDirectory);
 
-            var account = _brokersService.AccountsLookup[binance];
+                var account = _brokersService.AccountsLookup[binance];
 
-            Task.Run(() =>
+                Task.Run(() =>
+                {
+                    // TODO - threading
+                    /*account.UpdateBrokerAccount(
+                        binance,
+                        _candlesService,
+                        _marketDetailsService,
+                        _tradeDetailsAutoCalculatorService);
+                    account.SaveAccount(DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog"));*/
+
+                });
+
+                RunStrategyLiveViewModel = new RunStrategyLiveViewModel();
+
+                LoginOutViewModel = new LoginOutViewModel();
+
+                RefreshStrategyFilenames();
+            }
+            catch (Exception ex)
             {
-                // TODO - threading
-                /*account.UpdateBrokerAccount(
-                    binance,
-                    _candlesService,
-                    _marketDetailsService,
-                    _tradeDetailsAutoCalculatorService);
-                account.SaveAccount(DataDirectoryService.GetMainDirectoryWithApplicationName("TradeLog"));*/
-
-            });
-
-            RunStrategyLiveViewModel = new RunStrategyLiveViewModel();
-
-            LoginOutViewModel = new LoginOutViewModel();
-
-            RefreshStrategyFilenames();
+                Log.Error("Failed to create MainWindowViewModel", ex);
+                throw;
+            }
         }
 
         public LoginOutViewModel LoginOutViewModel { get; private set; }
