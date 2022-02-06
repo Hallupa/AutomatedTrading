@@ -58,7 +58,7 @@ namespace StrategyEditor.ViewModels
 
             _testResultsUpdatedObserver = _results.TestRunCompleted.Subscribe(newResults =>
             {
-                _trades = newResults;
+                _trades = newResults.Trades;
                 if (_trades.Count > 0)
                 {
                     ViewPairText = _trades[0].Market;

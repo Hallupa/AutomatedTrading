@@ -13,6 +13,7 @@ using log4net;
 using TraderTools.Basics;
 using TraderTools.Core.UI;
 using TraderTools.Core.UI.ViewModels;
+using TraderTools.Core.UI.Views;
 using TraderTools.Indicators;
 
 namespace StrategyEditor.ViewModels
@@ -72,12 +73,14 @@ namespace StrategyEditor.ViewModels
             {
                 UpdateTrades();
                 ResultsViewModel.UpdateResults();
+                UpdateStatusColumn(newResults.Strategy?.BrokerKind);
             });
 
             _testResultsUpdatedObserver = _results.TestRunCompleted.Subscribe(newResults =>
             {
                 UpdateTrades();
                 ResultsViewModel.UpdateResults();
+                UpdateStatusColumn(newResults.Strategy?.BrokerKind);
             });
 
             Task.Run(() =>
@@ -91,6 +94,24 @@ namespace StrategyEditor.ViewModels
             TradesViewModel.ShowClosedTrades = true;
             TradesViewModel.ShowOpenTrades = true;
             TradesViewModel.ShowOrders = true;
+            TradesViewModel.TradeListDisplayOptions &= ~TradeListDisplayOptionsFlag.Comments
+                                                       & ~TradeListDisplayOptionsFlag.Strategies;
+        }
+
+        private void UpdateStatusColumn(BrokerKind? brokerKind)
+        {
+            if (brokerKind is BrokerKind.Trade)
+            {
+                TradesViewModel.TradeListDisplayOptions &= ~TradeListDisplayOptionsFlag.Status
+                                                           & ~TradeListDisplayOptionsFlag.PoundsPerPip
+                                                           & ~TradeListDisplayOptionsFlag.ResultR;
+            }
+            else
+            {
+                TradesViewModel.TradeListDisplayOptions |= TradeListDisplayOptionsFlag.Status
+                                                           | TradeListDisplayOptionsFlag.PoundsPerPip
+                                                           | TradeListDisplayOptionsFlag.ResultR;
+            }
         }
 
         private void ChartViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)

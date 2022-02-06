@@ -9,9 +9,11 @@ using System.Windows.Threading;
 using Abt.Controls.SciChart.Model.DataSeries;
 using Abt.Controls.SciChart.Visuals.RenderableSeries;
 using Hallupa.Library;
+using Hallupa.Library.Extensions;
+using Hallupa.TraderTools.Basics;
+using Hallupa.TraderTools.Simulation;
 using StrategyEditor.Services;
 using TraderTools.Basics;
-using TraderTools.Basics.Extensions;
 
 namespace StrategyEditor.ViewModels
 {
@@ -40,18 +42,18 @@ namespace StrategyEditor.ViewModels
 
         public ObservableCollection<IRenderableSeries> SeriesList
         {
-            get { return (ObservableCollection<IRenderableSeries>) GetValue(SeriesListProperty); }
+            get { return (ObservableCollection<IRenderableSeries>)GetValue(SeriesListProperty); }
             set { SetValue(SeriesListProperty, value); }
         }
 
         public DelegateCommand ClearResultsChartCommand { get; private set; }
-        
+
         private void ClearResultsChart()
         {
             SeriesList.Clear();
         }
 
-        private void UpdateChartData(List<Trade> trades)
+        private void UpdateChartData((List<Trade> Trades, StrategyBase Strategy, Dictionary<string, AssetBalance> InitialAssetBalances) d)
         {
             var series = new XyDataSeries<DateTime, double>();
 
@@ -60,45 +62,39 @@ namespace StrategyEditor.ViewModels
                 var xvalues = new List<DateTime>();
                 var yvalues = new List<double>();
 
-                var startedTrades = trades.Where(t => t.EntryDateTime != null && !t.Ignore).ToList();
+                var startedTrades = d.Trades.Where(t => t.EntryDateTime != null && !t.Ignore).ToList();
 
                 if (startedTrades.Count > 0)
                 {
+                    var candlesLookup = new Dictionary<(string Market, IBroker Broker), List<Candle>>();
+                    var broker = _brokerService.GetBroker(d.Strategy.Broker);
                     var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
                     var latest = DateTime.UtcNow;
-                    var broker = _brokerService.GetBroker("FXCM");
+
+                    var assetBalances = d.InitialAssetBalances.ToDictionary(x => x.Key, x => new AssetBalance(x.Key, x.Value.Balance));
+                    var orderedTrades = d.Trades.Where(t => t.EntryDateTime <= latest).OrderBy(x => x.EntryDateTime).ToList();
+                    var tradeIndex = 0;
+
+                    if (d.Strategy.BrokerKind == BrokerKind.SpreadBet)
+                        throw new ApplicationException("Not supported yet");
 
                     for (var date = earliest; date <= latest; date = date.AddDays(1))
                     {
-                        var balance = 10000M;
-                        var currentTrades = trades.Where(t => t.EntryDateTime <= date).ToList();
-                        foreach (var t in currentTrades)
+                        while (tradeIndex < orderedTrades.Count && orderedTrades[tradeIndex].EntryDateTime <= date)
                         {
-                            if (date >= t.CloseDateTime)
-                            {
-                                balance += (decimal)t.Profit.Value;
-                            }
-                            else
-                            {
-                                var risk = t.RiskAmount.Value;
-                                var candle =
-                                    _brokersCandlesService.GetLastClosedCandle(t.Market, _brokerService.GetBroker(t.Broker), Timeframe.D1, date,
-                                        false);
-                                var price = (decimal)(t.TradeDirection == TradeDirection.Long
-                                    ? candle.Value.CloseBid
-                                    : candle.Value.CloseAsk);
+                            var t = orderedTrades[tradeIndex];
+                            tradeIndex++;
 
-
-                                /*var stopDist = t.InitialStop.Value - t.EntryPrice;
-                                var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;*/
-                                var profit = price * t.EntryQuantity.Value - t.EntryPrice.Value * t.EntryQuantity.Value; //TODO Add commission
-                                balance += (decimal)profit;
-                            }
+                            assetBalances.UpdateAssetBalance(t);
                         }
 
+                        var valueUsd = GetAssetBalancesUsdtValue(date, candlesLookup, assetBalances, broker);
                         xvalues.Add(date);
-                        yvalues.Add((double)balance);
+                        yvalues.Add((double)valueUsd);
+
                     }
+
+
 
                     series.Append(xvalues, yvalues);
                 }
@@ -114,6 +110,38 @@ namespace StrategyEditor.ViewModels
                     SeriesList.Add(renderableSeries);
                 });
             });
+        }
+
+        private decimal GetAssetBalancesUsdtValue(
+            DateTime currentDateTimeUtc, Dictionary<(string Market, IBroker Broker), List<Candle>> candlesLookup,
+            Dictionary<string, AssetBalance> assetBalances, IBroker broker)
+        {
+            var totalUsdtValue = 0M;
+            foreach (var assetBalance in assetBalances)
+            {
+                if (assetBalance.Value.Asset == "USDT")
+                {
+                    totalUsdtValue += assetBalance.Value.Balance;
+                    continue;
+                }
+
+                var usdtMarket = $"{assetBalance.Key}USDT";
+                if (!candlesLookup.ContainsKey((usdtMarket, broker)))
+                {
+                    candlesLookup[(usdtMarket, broker)] = _brokersCandlesService.GetCandles(broker, usdtMarket, Timeframe.D1, false);
+                }
+
+                var candles = candlesLookup[(usdtMarket, broker)];
+                var lastClosedCandleIndex = candles.BinarySearchGetItem(
+                    i => candles[i].CloseTimeTicks, 0, currentDateTimeUtc.Ticks,
+                    BinarySearchMethod.PrevLowerValueOrValue);
+
+                var candle = candles[lastClosedCandleIndex];
+                var assetUsdtValue = assetBalance.Value.Balance * (decimal)candle.CloseBid;
+                totalUsdtValue += assetUsdtValue;
+            }
+
+            return totalUsdtValue;
         }
     }
 }

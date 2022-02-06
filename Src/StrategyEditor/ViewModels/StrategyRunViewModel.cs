@@ -254,16 +254,12 @@ namespace StrategyEditor.ViewModels
                 var runner = new StrategyRunner(
                     _candlesService,
                     _brokersService.GetBroker(strategy.Broker),
-                    new List<AssetBalance>
-                    {
-                        new AssetBalance("USDT", 10000)
-                    },
                     _brokersService);
                 var trades = runner.Run(
                     strategy,
                     () => _stopRun);
 
-                _results.AddResult(trades);
+                _results.AddResult(trades, strategy, runner.InitialAssetBalances);
 
                 // Save results
                 /*if (File.Exists(_savedResultsPath))
