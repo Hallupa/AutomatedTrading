@@ -13,6 +13,7 @@
     <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.31" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SciChart" Version="6.5.1.26063" />
     <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.6.0-rc0" />
     <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
     <PackageReference Include="System.Reactive" Version="5.0.0" />
@@ -26,12 +27,6 @@
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
 
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Abt.Controls.SciChart.Wpf">
-      <HintPath>$(AppData)\ABT Software Services Ltd\SciChart_v3.5.0.7128\Lib\net46\Abt.Controls.SciChart.Wpf.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
