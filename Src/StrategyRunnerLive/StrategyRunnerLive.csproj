@@ -4,11 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="..\..\..\GIT\TradingStrategies\HK0.8.cs" Link="HK0.8.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.12" />

@@ -8,13 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Hallupa.Library;
-using Hallupa.TraderTools.Basics;
 using Hallupa.TraderTools.Brokers.Binance;
 using Hallupa.TraderTools.Simulation;
 using log4net;
 using TraderTools.Basics;
 using TraderTools.Basics.Extensions;
-using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
 using TraderTools.Simulation;
 
@@ -117,9 +115,8 @@ namespace StrategyRunnerLive.ViewModels
                 }
             }
 
-
-
             // Create strategies
+            strategy.IsLive = true;
             strategy.SetSimulationParameters(trades, candlesLookup);
             strategy.SetInitialised(
                 true,
@@ -128,9 +125,23 @@ namespace StrategyRunnerLive.ViewModels
                 broker, 
                 _brokersService);
 
-
             // Update indicators
-            // TODO
+            var a = new List<AddedCandleTimeframe>();
+            foreach (var m in strategy.Markets)
+            {
+                foreach (var t in strategy.Timeframes)
+                {
+                    var candles = _candlesService.GetCandles(broker, m, t, true, forceUpdate: false)
+                        .Where(c => c.IsComplete == 1)
+                        .ToList();
+
+                    foreach (var c in candles)
+                    {
+                        a.Add(new AddedCandleTimeframe(m, t, c));
+                    }
+                }
+            }
+            strategy.UpdateIndicators(a);
 
             strategy.UpdateBalances();
             strategy.Starting();
@@ -138,8 +149,6 @@ namespace StrategyRunnerLive.ViewModels
             Log.Info("Running main processing loop");
             while (true)
             {
-
-
                 // Update candles
                 var addedCandles = new List<AddedCandleTimeframe>();
                 foreach (var m in strategy.Markets)
@@ -251,8 +260,8 @@ namespace StrategyRunnerLive.ViewModels
         private Type CompileStrategyAndGetStrategyMarkets(string selectedStrategyFilename)
         {
             // Compile strategy
-            var code = File.ReadAllText(Path.Combine(_strategiesDirectory, $"{selectedStrategyFilename}.txt"));
-            var strategyType = StrategyHelper.CompileStrategy(code);
+            var code = File.ReadAllText(Path.Combine(_strategiesDirectory, $"{selectedStrategyFilename}.cs"));
+            var strategyType = StrategyHelper.CompileStrategy(code, selectedStrategyFilename);
 
             if (strategyType == null)
             {

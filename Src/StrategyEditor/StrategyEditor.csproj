@@ -4,34 +4,52 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" Version="6.0.1" />
-    <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
-    <PackageReference Include="System.Reactive" Version="4.4.1" />
+    <PackageReference Include="AvalonEdit" Version="6.1.2.30" />
+    <PackageReference Include="log4net" Version="2.0.12" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.31" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.6.0-rc0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
   </ItemGroup>
+	
+	<ItemGroup>
+		<Compile Include="C:\OCW\GIT\TradingStrategies\*.cs">
+			<Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
+		</Compile>
+	</ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\Library.UI\Library.UI.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\Library\Library.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Basics\TraderTools.Basics.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Brokers.Binance\TraderTools.Brokers.Binance.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Core\TraderTools.Core.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
+    <ProjectReference Include="..\..\..\SrcCommonCode\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+    <!--
     <ProjectReference Include="..\..\Common\Src\Library.UI\Library.UI.csproj" />
     <ProjectReference Include="..\..\Common\Src\Library\Library.csproj" />
     <ProjectReference Include="..\..\Common\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
-    <ProjectReference Include="..\..\Common\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
-    <ProjectReference Include="..\..\Common\Src\TraderTools.Core\TraderTools.Core.csproj" />
-    <ProjectReference Include="..\..\Common\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
-    <ProjectReference Include="..\..\Common\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+    <ProjectReference Include="..\..\Common\Src\TraderTools.Core\TraderTools.Core.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Abt.Controls.SciChart.Wpf">
-      <HintPath>..\..\..\..\Users\Oliver Wickenden\AppData\Roaming\ABT Software Services Ltd\SciChart_v3.5.0.7128\Lib\net40\Abt.Controls.SciChart.Wpf.dll</HintPath>
+      <HintPath>..\..\..\..\Users\Oliver Wickenden\AppData\Roaming\ABT Software Services Ltd\SciChart_v3.5.0.7128\Lib\net46\Abt.Controls.SciChart.Wpf.dll</HintPath>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="DefaultStrategyCrypto.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Update="DefaultStrategy.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
@@ -49,6 +67,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="AppSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -32,7 +32,6 @@
                 <RibbonGroup Header="Pages">
                     <RibbonToggleButton Label="Strategy" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.RunStrategy}, Mode=TwoWay}"/>
                     <RibbonToggleButton Label="Results" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.StrategyViewTrade}, Mode=TwoWay}"/>
-                    <RibbonToggleButton Label="View trade" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.StrategyViewTrade}, Mode=TwoWay}"/>
                     <RibbonToggleButton Label="Results chart" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.StrategyEquity}, Mode=TwoWay}"/>
                     <RibbonToggleButton Label="Machine learning" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.MachineLearning}, Mode=TwoWay}"/>
                     <RibbonToggleButton Label="View all trades" IsChecked="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToBool}, ConverterParameter={x:Static viewModels1:DisplayPages.StrategyViewAllTrades}, Mode=TwoWay}"/>
@@ -101,6 +100,6 @@
             <Frame x:Name="StrategyViewAllTradesView" Source="Views/StrategyViewAllTradesView.xaml" Visibility="{Binding UIService.SelectedDisplayPage, Converter={StaticResource ObjToVis}, ConverterParameter={x:Static viewModels1:DisplayPages.StrategyViewAllTrades}, Mode=OneWay}"/>
         </Grid>
 
-        <ui:LogControl Grid.Row="2" ShowExpanded="True"/>
+        <ui:LogControl Grid.Row="2" ShowExpanded="True" ExpandedHeight="150"/>
     </Grid>
 </Window>

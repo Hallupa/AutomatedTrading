@@ -102,7 +102,7 @@ namespace StrategyRunnerLive.ViewModels
         private void RefreshStrategyFilenames()
         {
             StrategyFilenames.Clear();
-            var strategyPaths = Directory.GetFiles(_strategiesDirectory, "*.txt");
+            var strategyPaths = Directory.GetFiles(_strategiesDirectory, "*.cs");
             foreach (var strategyPath in strategyPaths)
             {
                 StrategyFilenames.Add(Path.GetFileNameWithoutExtension(strategyPath));
