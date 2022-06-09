@@ -10,7 +10,7 @@ namespace StrategyEditor
     {
         public static void UpdateAssetBalance(this Dictionary<string, AssetBalance> assetBalances, Trade trade)
         {
-            if (trade.TradeDirection == TradeDirection.Long && trade.EntryQuantity != null && trade.EntryPrice != null)
+            /* TODO if (trade.TradeDirection == TradeDirection.Long && trade.EntryQuantity != null && trade.EntryPrice != null)
             {
                 // Entry quantity already has commission taken off
                 assetBalances.AddToAssetBalance(trade.BaseAsset, trade.EntryQuantity.Value);
@@ -44,7 +44,7 @@ namespace StrategyEditor
             if (assetBalances.Any(x => x.Value.Balance < -0.0001M))
             {
                 throw new ApplicationException("Asset balance below zero");
-            }
+            }*/
         }
 
         private static void AddToAssetBalance(this Dictionary<string, AssetBalance> assetBalances, string asset, decimal amount)

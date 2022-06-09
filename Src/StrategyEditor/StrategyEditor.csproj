@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<OutputType>WinExe</OutputType>
+	<TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x64</Platforms>
+    <StartupObject>StrategyEditor.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,21 +20,17 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\\Src\Library.UI\Library.UI.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\Library\Library.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Basics\TraderTools.Basics.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Brokers.Binance\TraderTools.Brokers.Binance.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Core\TraderTools.Core.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Indicators\TraderTools.Indicators.csproj" />
-    <ProjectReference Include="..\..\Common\\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\Library.UI\Library.UI.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Brokers.Binance\TraderTools.Brokers.Binance.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
 
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Abt.Controls.SciChart.Wpf">
-      <HintPath>..\..\..\..\Users\Oliver Wickenden\AppData\Roaming\ABT Software Services Ltd\SciChart_v3.5.0.7128\Lib\net46\Abt.Controls.SciChart.Wpf.dll</HintPath>
+      <HintPath>$(AppData)\ABT Software Services Ltd\SciChart_v3.5.0.7128\Lib\net46\Abt.Controls.SciChart.Wpf.dll</HintPath>
     </Reference>
   </ItemGroup>
 

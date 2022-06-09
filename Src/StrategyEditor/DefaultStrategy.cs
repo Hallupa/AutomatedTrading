@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hallupa.TraderTools.Simulation;
 using TraderTools.Basics;
 using TraderTools.Simulation;
 
@@ -39,11 +40,11 @@ namespace StrategyEditor
 
                 if (r == 5)
                 {
-                    MarketShort(added.Market, Balance / (decimal)c.CloseBid, (decimal)(c.CloseBid + atr.Value), (decimal)(c.CloseBid - atr.Value));
+                    // TODO MarketShort(added.Market, Balance / (decimal)c.CloseBid, (decimal)(c.CloseBid + atr.Value), (decimal)(c.CloseBid - atr.Value));
                 }
                 else if (r == 10)
                 {
-                    MarketLong(added.Market, Balance / (decimal)c.CloseAsk, (decimal)(c.CloseAsk - atr.Value), (decimal)(c.CloseAsk + atr.Value));
+                    // TODO MarketLong(added.Market, Balance / (decimal)c.CloseAsk, (decimal)(c.CloseAsk - atr.Value), (decimal)(c.CloseAsk + atr.Value));
                 }
             }
         }

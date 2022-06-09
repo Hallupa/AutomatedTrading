@@ -12,7 +12,6 @@ using log4net;
 using StrategyRunnerLive.Views;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
-using TraderTools.Core.Services;
 
 namespace StrategyRunnerLive.ViewModels
 {

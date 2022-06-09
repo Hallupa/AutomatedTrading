@@ -6,8 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using log4net;
+using Numpy;
 using StrategyEditor.ViewModels;
-using Tensorflow;
+using TraderTools.Basics;
+
+/* TODOusing Tensorflow;
 using static Tensorflow.KerasApi;
 using static Tensorflow.Binding;
 using Tensorflow.Keras;
@@ -15,7 +18,7 @@ using Tensorflow.Keras.ArgsDefinition;
 using Tensorflow.Keras.Engine;
 using Tensorflow.Keras.Layers;
 using Tensorflow.NumPy;
-using TraderTools.Basics;
+using TraderTools.Basics;*/
 
 namespace StrategyEditor.ML
 {
@@ -37,7 +40,7 @@ namespace StrategyEditor.ML
     {
         private IBrokersCandlesService _candlesService;
         private readonly IBrokersService _brokersService;
-        private Sequential _model;
+        // TODO private Sequential _model;
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private TaskScheduler _modelThreadContext;
         private Dispatcher _modelDispatcher;
@@ -45,8 +48,8 @@ namespace StrategyEditor.ML
 
         static Trainer()
         {
-            Tensorflow.ops.enforce_singlethreading();
-            Binding.tf_output_redirect = new TensorFlowTextWriter();
+            /* TODO Tensorflow.ops.enforce_singlethreading();
+            Binding.tf_output_redirect = new TensorFlowTextWriter();*/
         }
 
         public Trainer(IBrokersCandlesService candlesService, IBrokersService brokersService)
@@ -94,7 +97,8 @@ namespace StrategyEditor.ML
 
         private List<MLFoundPoint> Test(List<Candle> candles)
         {
-            Log.Info("Running test");
+            return null;
+            /* TODO Log.Info("Running test");
             try
             {
                 var ret = new List<MLFoundPoint>();
@@ -136,14 +140,14 @@ namespace StrategyEditor.ML
             {
                 Log.Error("Failing to run test", ex);
                 return null;
-            }
+            }*/
         }
 
         public Task TrainAsync(MLPointCollection points)
         {
             return Task.Factory.StartNew(() =>
             {
-                _modelDispatcher.Invoke(() =>
+                /* TODO _modelDispatcher.Invoke(() =>
                 {
                     tf.Context.ensure_initialized();
                     Log.Info("Training");
@@ -173,7 +177,7 @@ namespace StrategyEditor.ML
                     _model.compile(keras.optimizers.SGD(0.01F), keras.losses.CategoricalCrossentropy(from_logits: true));*/
                     
 
-                    /*   CategoricalCrossentropy */
+                    /*   CategoricalCrossentropy /
                     
                     var numberOfClasses = 3;
                     _model = keras.Sequential(
@@ -203,11 +207,11 @@ namespace StrategyEditor.ML
                         keras.losses.CategoricalCrossentropy(),
                         new[] { "acc" });
 
-                    //here // SparseCategoricalCrossentropy?  Validation set? More generated data?*/
+                    //here // SparseCategoricalCrossentropy?  Validation set? More generated data?/
 
                     _model.fit(x, y, 5, 100, 1, validation_split: 0.1F);
-                    Log.Info("Training complete");
-                });
+                    Log.Info("Training complete");/
+                });*/
             });//, TaskCreationOptions.LongRunning);
         }
     }
