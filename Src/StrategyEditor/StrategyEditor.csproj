@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Brokers.Binance\TraderTools.Brokers.Binance.csproj" />
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Brokers.FXCM\TraderTools.Brokers.FXCM.csproj" />
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Core.UI\TraderTools.Core.UI.csproj" />
+    <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Core\TraderTools.Core.csproj" />
     <ProjectReference Include="..\..\..\CommonCode\Src\TraderTools.Simulation\TraderTools.Simulation.csproj" />
 
   </ItemGroup>
