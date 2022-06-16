@@ -65,83 +65,88 @@ namespace StrategyEditor.ViewModels
 
                 var startedTrades = d.Trades.Where(t => t.EntryDateTime != null && !t.Ignore).ToList();
 
-                if (d.Strategy.BrokerKind == BrokerKind.SpreadBet)
+                if (d.Strategy != null)
                 {
-                    var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
-                    var latest = DateTime.UtcNow;
-                    var broker = _brokerService.GetBroker("FXCM");
-
-                    for (var date = earliest; date <= latest; date = date.AddDays(1))
+                    if (d.Strategy.BrokerKind == BrokerKind.SpreadBet)
                     {
-                        var balance = 10000M;
-                        var currentTrades = d.Trades.Where(t => t.EntryDateTime <= date).ToList();
-                        foreach (var t in currentTrades)
-
-                        {
-                            if (date >= t.CloseDateTime)
-                            {
-                                balance += (decimal)t.Profit.Value;
-                            }
-                            else
-                            {
-                                var risk = t.RiskAmount.Value;
-                                var candle =
-                                    _brokersCandlesService.GetLastClosedCandle(t.Market,
-                                        _brokerService.GetBroker(t.Broker), Timeframe.D1, date,
-                                        false);
-                                var price = (decimal)(t.TradeDirection == TradeDirection.Long
-                                    ? candle.Value.CloseBid
-                                    : candle.Value.CloseAsk);
-
-
-                                /*var stopDist = t.InitialStop.Value - t.EntryPrice;
-                                var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;*/
-                                var profit = price * t.EntryQuantity.Value -
-                                             t.EntryPrice.Value * t.EntryQuantity.Value; //TODO Add commission
-                                balance += (decimal)profit;
-                            }
-
-                            xvalues.Add(date);
-                            yvalues.Add((double)balance);
-                        }
-                    }
-                }
-                else
-                {
-
-
-                    if (startedTrades.Count > 0)
-                    {
-                        var candlesLookup = new Dictionary<(string Market, IBroker Broker), List<Candle>>();
-                        var broker = _brokerService.GetBroker(d.Strategy.Broker);
                         var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
                         var latest = DateTime.UtcNow;
-
-                        var assetBalances = d.InitialAssetBalances.ToDictionary(x => x.Key,
-                            x => new AssetBalance(x.Key, x.Value.Balance));
-                        var orderedTrades = d.Trades.Where(t => t.EntryDateTime <= latest).OrderBy(x => x.EntryDateTime)
-                            .ToList();
-                        var tradeIndex = 0;
+                        var broker = _brokerService.GetBroker("FXCM");
 
                         for (var date = earliest; date <= latest; date = date.AddDays(1))
                         {
-                            while (tradeIndex < orderedTrades.Count && orderedTrades[tradeIndex].EntryDateTime <= date)
-                            {
-                                var t = orderedTrades[tradeIndex];
-                                tradeIndex++;
+                            var balance = 10000M;
+                            var currentTrades = d.Trades.Where(t => t.EntryDateTime <= date).ToList();
+                            foreach (var t in currentTrades)
 
-                                assetBalances.UpdateAssetBalance(t);
+                            {
+                                if (date >= t.CloseDateTime)
+                                {
+                                    balance += (decimal)t.Profit.Value;
+                                }
+                                else
+                                {
+                                    var risk = t.RiskAmount.Value;
+                                    var candle =
+                                        _brokersCandlesService.GetLastClosedCandle(t.Market,
+                                            _brokerService.GetBroker(t.Broker), Timeframe.D1, date,
+                                            false);
+                                    var price = (decimal)(t.TradeDirection == TradeDirection.Long
+                                        ? candle.Value.CloseBid
+                                        : candle.Value.CloseAsk);
+
+
+                                    /*var stopDist = t.InitialStop.Value - t.EntryPrice;
+                                    var profit = (((decimal)price - t.EntryPrice.Value) / stopDist) * risk;*/
+                                    var profit = price * t.EntryQuantity.Value -
+                                                 t.EntryPrice.Value * t.EntryQuantity.Value; //TODO Add commission
+                                    balance += (decimal)profit;
+                                }
+
+                                xvalues.Add(date);
+                                yvalues.Add((double)balance);
+                            }
+                        }
+                    }
+                    else
+                    {
+
+
+                        if (startedTrades.Count > 0)
+                        {
+                            var candlesLookup = new Dictionary<(string Market, IBroker Broker), List<Candle>>();
+                            var broker = _brokerService.GetBroker(d.Strategy.Broker);
+                            var earliest = startedTrades.OrderBy(t => t.EntryDateTime).First().EntryDateTime.Value.Date;
+                            var latest = DateTime.UtcNow;
+
+                            var assetBalances = d.InitialAssetBalances.ToDictionary(x => x.Key,
+                                x => new AssetBalance(x.Key, x.Value.Balance));
+                            var orderedTrades = d.Trades.Where(t => t.EntryDateTime <= latest)
+                                .OrderBy(x => x.EntryDateTime)
+                                .ToList();
+                            var tradeIndex = 0;
+
+                            for (var date = earliest; date <= latest; date = date.AddDays(1))
+                            {
+                                while (tradeIndex < orderedTrades.Count &&
+                                       orderedTrades[tradeIndex].EntryDateTime <= date)
+                                {
+                                    var t = orderedTrades[tradeIndex];
+                                    tradeIndex++;
+
+                                    assetBalances.UpdateAssetBalance(t);
+                                }
+
+                                var valueUsd = GetAssetBalancesUsdtValue(date, candlesLookup, assetBalances, broker);
+                                xvalues.Add(date);
+                                yvalues.Add((double)valueUsd);
+
                             }
 
-                            var valueUsd = GetAssetBalancesUsdtValue(date, candlesLookup, assetBalances, broker);
-                            xvalues.Add(date);
-                            yvalues.Add((double)valueUsd);
 
+
+                            series.Append(xvalues, yvalues);
                         }
-
-
-
-                        series.Append(xvalues, yvalues);
                     }
                 }
 

@@ -2,13 +2,11 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hallupa.Library;
 using Hallupa.TraderTools.Brokers.Binance;
 using log4net;
-using Microsoft.Extensions.Configuration;
 using TraderTools.Basics;
 using TraderTools.Brokers.FXCM;
 using TraderTools.Core.Services;
@@ -38,6 +36,11 @@ namespace StrategyRunnerLive.ViewModels
                 DependencyContainer.ComposeParts(this);
 
                 _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
+
+                if (!Directory.Exists(_strategiesDirectory))
+                {
+                    Directory.CreateDirectory(_strategiesDirectory);
+                }
 
                 var binance = new BinanceBroker();
 

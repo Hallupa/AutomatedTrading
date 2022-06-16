@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using Hallupa.TraderTools.Basics;
 using Hallupa.TraderTools.Simulation;
 using TraderTools.Basics;
 using TraderTools.Simulation;
@@ -9,43 +8,40 @@ namespace StrategyEditor
 {
     public class DefaultStrategy : StrategyBase
     {
-        private Random _rnd;
-        private Dictionary<string, IndicatorValues> _atr = new Dictionary<string, IndicatorValues>();
+        private readonly IndicatorValues _ema8;
+        private readonly IndicatorValues _ema21;
 
         public DefaultStrategy()
         {
-            _rnd = new Random();
-            SetTimeframes(Timeframe.H2);
+            SetSimulationGranularity(Timeframe.M5);
+            SetCommission(0.00075M); // With BNB discount
+            SetBroker("Binance");
+            SetMarkets("ETHUSDT");
+            SetTimeframes(Timeframe.H1);
+            SetSimulationInitialBalance(new AssetBalance("USDT", 10000M));
 
-            AddMajors();
-            AddMinors();
-            AddMajorIndices();
-
-            foreach (var m in Markets)
-            {
-                _atr[m] = ATR(m, Timeframe.H2);
-            }
+            _ema21 = EMA("ETHUSDT", Timeframe.H1, 21);
+            _ema8 = EMA("ETHUSDT", Timeframe.H1, 8);
         }
 
         public override void ProcessCandles(List<AddedCandleTimeframe> addedCandleTimeframes)
         {
-            foreach (var added in addedCandleTimeframes)
+            if (!_ema8.IsFormed || !_ema21.IsFormed) return;
+
+            if (_ema8.Value > _ema21.Value)
             {
-                if (!_atr[added.Market].HasValue) continue;
+                var balance = GetCurrentBalance("USDT");
+                if (balance <= 0.1M) return;
 
+                MarketBuy("ETHUSDT", "ETH", balance);
+            }
 
-                var c = Candles[added.Market][Timeframe.H2].Last();
-                var r = _rnd.Next(0, 20);
-                var atr = _atr[added.Market];
+            if (_ema8.Value < _ema21.Value)
+            {
+                var balance = GetCurrentBalance("ETH");
+                if (balance <= 0.1M) return;
 
-                if (r == 5)
-                {
-                    // TODO MarketShort(added.Market, Balance / (decimal)c.CloseBid, (decimal)(c.CloseBid + atr.Value), (decimal)(c.CloseBid - atr.Value));
-                }
-                else if (r == 10)
-                {
-                    // TODO MarketLong(added.Market, Balance / (decimal)c.CloseAsk, (decimal)(c.CloseAsk - atr.Value), (decimal)(c.CloseAsk + atr.Value));
-                }
+                MarketSell("ETHUSDT", "ETH", balance);
             }
         }
     }

@@ -64,11 +64,13 @@ namespace StrategyEditor.ViewModels
             RunStrategyCommand = new DelegateCommand(RunStrategyClicked);
             StopStrategyCommand = new DelegateCommand(StopStrategyClicked);
             _broker = _brokersService.GetBroker("FXCM");
+            var userProfileDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-            _strategiesDirectory = Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName);
+            _strategiesDirectory = Path.GetFullPath(Path.Combine(_dataDirectoryService.MainDirectoryWithApplicationName));
+
             try
             {
-                var customDir = ConfigurationManager.AppSettings["CustomStrategiesDirectory"];
+                var customDir = Path.GetFullPath(ConfigurationManager.AppSettings["CustomStrategiesDirectory"].Replace("%UserProfile%", userProfileDirectory, StringComparison.OrdinalIgnoreCase));
                 if (!string.IsNullOrEmpty(customDir)) _strategiesDirectory = customDir;
             }
             catch (Exception)

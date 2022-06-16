@@ -45,6 +45,7 @@ namespace StrategyEditor.ViewModels
         [Import] public UIService UIService { get; private set; }
         private bool _updatingCandles;
         private Dispatcher _dispatcher;
+        private bool _includeCrypto = true;
 
         #endregion
 
@@ -60,7 +61,7 @@ namespace StrategyEditor.ViewModels
             var brokers = new IBroker[]
             {
                 new FxcmBroker(),
-                new BinanceBroker("TODO", "TODO"),
+                new BinanceBroker("", ""),
             };
 
             // Setup brokers and load accounts
@@ -90,21 +91,22 @@ namespace StrategyEditor.ViewModels
             var dispatcher = Dispatcher.CurrentDispatcher;
             _updatingCandles = true;
 
-            var candleUpdater = new BinanceCandlesUpdater(
-                (BinanceBroker) _brokersService.Brokers.First(b => b.Name == "Binance"),
-                _candleService,
-                _marketDetailsService);
+            if (_includeCrypto)
+            {
+                var candleUpdater = new BinanceCandlesUpdater(
+                    (BinanceBroker)_brokersService.Brokers.First(b => b.Name == "Binance"),
+                    _candleService,
+                    _marketDetailsService);
 
-            candleUpdater
-                .RunAsync()
-                .ContinueWith(
-                    t => Task.Run(() =>
-                    {
-                        dispatcher.Invoke(() =>
-                        {
-                            _updatingCandles = false;
-                        });
-                    }));
+                candleUpdater
+                    .RunAsync()
+                    .ContinueWith(
+                        t => Task.Run(() => { dispatcher.Invoke(() => { _updatingCandles = false; }); }));
+            }
+            else
+            {
+
+            }
         }
 
         #endregion
